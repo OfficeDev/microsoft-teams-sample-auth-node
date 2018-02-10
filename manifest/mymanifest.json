@@ -1,0 +1,45 @@
+﻿{
+  "$schema": "https://statics.teams.microsoft.com/sdk/v1.0/manifest/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.0",
+  "version": "1.0",
+  "id": "0b918988-5c4d-4451-a946-b52a8219f558",
+  "packageName": "com.aosolis.teams.authbot",
+  "developer": {
+    "name": "Adrian Solis",
+    "websiteUrl": "https://www.example.com",
+    "privacyUrl": "https://privacy.microsoft.com/PrivacyStatement",
+    "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement/"
+  },
+  "name": {
+    "short": "Teams AuthBot"
+  },
+  "description": {
+    "short": "Bot authentication sample for Microsoft Teams",
+    "full": "Bot authentication sample for Microsoft Teams"
+  },
+  "icons": {
+    "outline": "Logo_LinkedIn_20x20.png",
+    "color": "Logo_LinkedIn_96x96.png"
+  },
+  "accentColor": "#0077B5",
+  "configurableTabs": [
+  ],
+  "staticTabs": [
+  ],
+  "bots": [
+    {
+      "botId": "247aa88a-c2a5-4aa4-9e01-449bd49a2306",
+      "scopes": [
+        "personal",
+        "team"
+      ]
+    }
+  ],
+  "permissions": [
+    "messageTeamMembers",
+    "identity"
+  ],
+  "validDomains": [
+    "*.ngrok.io"
+  ]
+}

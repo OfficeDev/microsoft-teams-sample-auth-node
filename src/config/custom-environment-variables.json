@@ -1,0 +1,22 @@
+{
+    "app": {
+        "baseUri": "BASE_URI",
+        "instrumentationKey": "APPINSIGHTS_INSTRUMENTATIONKEY"
+    },
+    "bot": {
+        "appId": "MICROSOFT_APP_ID",
+        "appPassword": "MICROSOFT_APP_PASSWORD"
+    },
+    "linkedIn": {
+        "clientId": "LINKEDIN_CLIENT_ID",
+        "clientSecret": "LINKEDIN_CLIENT_SECRET"
+    },
+    "azureAD": {
+        "appId": "MICROSOFT_APP_ID",
+        "appPassword": "MICROSOFT_APP_PASSWORD"
+    },
+    "google": {
+        "clientId": "GOOGLE_CLIENT_ID",
+        "clientSecret": "GOOGLE_CLIENT_SECRET"
+    }
+}
