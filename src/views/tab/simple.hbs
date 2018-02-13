@@ -37,7 +37,7 @@
         </p>
 
         <!-- Login button -->
-        <button onclick="login()">Login to Azure AD</button>
+        <button onclick="loginV1()">Login to Azure AD</button>
         <button onclick="loginV2()">Login to Azure AD (V2 endpoint)</button>
 
         <!-- Result -->
@@ -59,16 +59,21 @@
             microsoftTeams.initialize();
 
             // Login to Azure AD and get access to Microsoft Graph
-            function login() {
+            function login(url) {
                 hideProfileAndError(); 
 
                 microsoftTeams.authentication.authenticate({
-                    url: window.location.origin + "/tab/simple-start",
+                    url: url,
                     width: 600,
                     height: 535,
                     successCallback: function (result) {
                         console.log("Login succeeded: " + result);
-                        getUserProfile(result.accessToken);
+
+                        let data = localStorage.getItem(result);
+                        localStorage.removeItem(result);
+                        
+                        let tokenResult = JSON.parse(data);
+                        getUserProfile(tokenResult.accessToken);
                     },
                     failureCallback: function (reason) {
                         console.log("Login failed: " + reason);
@@ -77,23 +82,12 @@
                 });
             }
 
-            // Login to Azure AD and get access to Microsoft Graph
-            function loginV2() {
-                hideProfileAndError(); 
+            function loginV1() {
+                login(window.location.origin + "/tab/simple-start");
+            }
 
-                microsoftTeams.authentication.authenticate({
-                    url: window.location.origin + "/tab/simple-start-v2",
-                    width: 600,
-                    height: 535,
-                    successCallback: function (result) {
-                        console.log("Login succeeded: " + result);
-                        getUserProfile(result.accessToken);
-                    },
-                    failureCallback: function (reason) {
-                        console.log("Login failed: " + reason);
-                        handleAuthError(reason);
-                    }
-                });
+            function loginV2() {
+                login(window.location.origin + "/tab/simple-start-v2");
             }
 
             // Get the user's profile information from Microsoft Graph
