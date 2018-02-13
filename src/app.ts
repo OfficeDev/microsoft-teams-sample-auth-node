@@ -45,6 +45,9 @@ app.use(bodyParser.json());
 
 let handlebars = exphbs.create({
     extname: ".hbs",
+    helpers: {
+        appId: () => { return config.get("bot.appId"); },
+    },
 });
 app.engine("hbs", handlebars.engine);
 app.set("view engine", "hbs");
@@ -85,10 +88,19 @@ bot.on("error", (error: Error) => {
 // Configure bot routes
 app.post("/api/messages", connector.listen());
 
-// Configure auth routes
+// Configure auth callback routes
 app.get("/auth/:provider/callback", (req, res) => {
     bot.handleOAuthCallback(req, res, req.params["provider"]);
 });
+
+// Tab authentication sample routes
+app.get("/tab/simple", (req, res) => { res.render("tab/simple"); });
+app.get("/tab/simple-start", (req, res) => { res.render("tab/simple-start"); });
+app.get("/tab/simple-start-v2", (req, res) => { res.render("tab/simple-start-v2"); });
+app.get("/tab/simple-end", (req, res) => { res.render("tab/simple-end"); });
+app.get("/tab/silent", (req, res) => { res.render("tab/silent"); });
+app.get("/tab/silent-start", (req, res) => { res.render("tab/silent-start"); });
+app.get("/tab/silent-end", (req, res) => { res.render("tab/silent-end"); });
 
 // Configure ping route
 app.get("/ping", (req, res) => {
