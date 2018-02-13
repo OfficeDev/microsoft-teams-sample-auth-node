@@ -35,6 +35,7 @@ import * as winston from "winston";
 import * as storage from "./storage";
 import * as providers from "./providers";
 import { AuthBot } from "./AuthBot";
+import { ValidateAADToken } from "./apis/ValidateAADToken";
 
 let app = express();
 
@@ -46,7 +47,7 @@ app.use(bodyParser.json());
 let handlebars = exphbs.create({
     extname: ".hbs",
     helpers: {
-        appId: () => { return config.get("bot.appId"); },
+        appId: () => { return config.get("app.appId"); },
     },
 });
 app.engine("hbs", handlebars.engine);
@@ -101,6 +102,7 @@ app.get("/tab/simple-end", (req, res) => { res.render("tab/simple-end"); });
 app.get("/tab/silent", (req, res) => { res.render("tab/silent"); });
 app.get("/tab/silent-start", (req, res) => { res.render("tab/silent-start"); });
 app.get("/tab/silent-end", (req, res) => { res.render("tab/silent-end"); });
+app.get("/api/validateToken", ValidateAADToken.listen());
 
 // Configure ping route
 app.get("/ping", (req, res) => {
