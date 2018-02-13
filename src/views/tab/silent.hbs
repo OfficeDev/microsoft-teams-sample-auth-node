@@ -58,62 +58,57 @@
         <script type="text/javascript">
             microsoftTeams.initialize();
     
-            let upn = undefined;
-            microsoftTeams.getContext(function (context) {
-                upn = context.upn;
-                loadData(upn);
-            });
+            // Parse query parameters
+            let queryParams = getQueryParameters();
+            let upn = queryParams["upn"];
 
-            // Loads data for the given user
-            function loadData(upn) {
-                // ADAL.js configuration
-                let config = {
-                    clientId: "{{appId}}",
-                    redirectUri: window.location.origin + "/tab/silent-end",       // This should be in the list of redirect uris for the AAD app
-                    cacheLocation: "localStorage",
-                    navigateToLoginRequestUrl: false,
-                };
+            // ADAL.js configuration
+            let config = {
+                clientId: "{{appId}}",
+                redirectUri: window.location.origin + "/tab/silent-end",       // This should be in the list of redirect uris for the AAD app
+                cacheLocation: "localStorage",
+                navigateToLoginRequestUrl: false,
+            };
 
-                // Setup extra query parameters for ADAL
-                // - openid and profile scope adds profile information to the id_token
-                // - login_hint provides the expected user name
-                if (upn) {
-                    config.extraQueryParameters = "scope=openid+profile&login_hint=" + encodeURIComponent(upn);
-                } else {
-                    config.extraQueryParameters = "scope=openid+profile";              
+            // Setup extra query parameters for ADAL
+            // - openid and profile scope adds profile information to the id_token
+            // - login_hint provides the expected user name
+            if (upn) {
+                config.extraQueryParameters = "scope=openid+profile&login_hint=" + encodeURIComponent(upn);
+            } else {
+                config.extraQueryParameters = "scope=openid+profile";              
+            }
+    
+            let authContext = new AuthenticationContext(config);
+    
+            // See if there's a cached user and it matches the expected user
+            let user = authContext.getCachedUser();
+            if (user) {
+                if (user.userName !== upn) {
+                    // User doesn't match, clear the cache
+                    authContext.clearCache();
                 }
-        
-                let authContext = new AuthenticationContext(config);
-        
-                // See if there's a cached user and it matches the expected user
-                let user = authContext.getCachedUser();
-                if (user) {
-                    if (user.userName !== upn) {
-                        // User doesn't match, clear the cache
-                        authContext.clearCache();
+            }
+    
+            // Get the id token (which is the access token for resource = clientId)
+            let token = authContext.getCachedToken(config.clientId);
+            if (token) {
+                showProfileInformation(token);
+            } else {
+                // No token, or token is expired
+                authContext._renewIdToken(function (err, idToken) {
+                    if (err) {
+                        console.log("Renewal failed: " + err);
+
+                        // Failed to get the token silently; show the login button
+                        $("#btnLogin").css({ display: "" });
+
+                        // You could attempt to launch the login popup here, but in browsers this could be blocked by
+                        // a popup blocker, in which case the login attempt will fail with the reason FailedToOpenWindow.
+                    } else {
+                        showProfileInformation(idToken);
                     }
-                }
-        
-                // Get the id token (which is the access token for resource = clientId)
-                let token = authContext.getCachedToken(config.clientId);
-                if (token) {
-                    showProfileInformation(token);
-                } else {
-                    // No token, or token is expired
-                    authContext._renewIdToken(function (err, idToken) {
-                        if (err) {
-                            console.log("Renewal failed: " + err);
-
-                            // Failed to get the token silently; show the login button
-                            $("#btnLogin").css({ display: "" });
-
-                            // You could attempt to launch the login popup here, but in browsers this could be blocked by
-                            // a popup blocker, in which case the login attempt will fail with the reason FailedToOpenWindow.
-                        } else {
-                            showProfileInformation(idToken);
-                        }
-                    });
-                }
+                });
             }
     
             // Login to Azure AD
@@ -171,6 +166,18 @@
                         $("#divProfile").css({ display: "none" });
                     },
                 });
+            }
+
+            // Parse query parameters into key-value pairs
+            function getQueryParameters() {
+                let queryParams = {};
+                location.search.substr(1).split("&").forEach(function(item) {
+                    let s = item.split("="),
+                    k = s[0],
+                    v = s[1] && decodeURIComponent(s[1]);
+                    queryParams[k] = v;
+                });
+                return queryParams;
             }
         </script>
     </body>
