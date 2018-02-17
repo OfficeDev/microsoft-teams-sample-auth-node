@@ -95,13 +95,13 @@ app.get("/auth/:provider/callback", (req, res) => {
 });
 
 // Tab authentication sample routes
-app.get("/tab/simple", (req, res) => { res.render("tab/simple"); });
-app.get("/tab/simple-start", (req, res) => { res.render("tab/simple-start"); });
-app.get("/tab/simple-start-v2", (req, res) => { res.render("tab/simple-start-v2"); });
-app.get("/tab/simple-end", (req, res) => { res.render("tab/simple-end"); });
-app.get("/tab/silent", (req, res) => { res.render("tab/silent"); });
-app.get("/tab/silent-start", (req, res) => { res.render("tab/silent-start"); });
-app.get("/tab/silent-end", (req, res) => { res.render("tab/silent-end"); });
+app.get("/tab/simple", (req, res) => { res.render("tab/simple/simple"); });
+app.get("/tab/simple-start", (req, res) => { res.render("tab/simple/simple-start"); });
+app.get("/tab/simple-start-v2", (req, res) => { res.render("tab/simple/simple-start-v2"); });
+app.get("/tab/simple-end", (req, res) => { res.render("tab/simple/simple-end"); });
+app.get("/tab/silent", (req, res) => { res.render("tab/silent/silent"); });
+app.get("/tab/silent-start", (req, res) => { res.render("tab/silent/silent-start"); });
+app.get("/tab/silent-end", (req, res) => { res.render("tab/silent/silent-end"); });
 app.get("/api/validateToken", ValidateAADToken.listen());
 
 // Configure ping route
