@@ -110,6 +110,12 @@
                     }
                 });
             }
+
+            // To get an access token to a resource like Graph,
+            //   1. Provide the resource id to getCachedToken 
+            //          authContext.getCachedToken("https://graph.microsoft.com")
+            //   2. Call _renewToken instead of _renewIdToken
+            //          authContext._renewToken("https://graph.microsoft.com", function(err, accessToken) { ... })
     
             // Login to Azure AD
             function login() {
@@ -125,7 +131,7 @@
                         let authContext = new AuthenticationContext();
                         let idToken = authContext.getCachedToken(config.clientId);
                         if (idToken) {
-                            showProfileInformation(idToken);
+                            showUserInformation(idToken);
                         } else {
                             console.error("Error getting cached id token. This should never happen.");                            
                             // At this point we have to get the user involved, so show the login button
@@ -146,8 +152,12 @@
                 });
             }
     
-            // Get the user's profile information from the id token
-            function showProfileInformation(idToken) {
+            // Validate the provided id_token, and show the user information from claims in the id_token.
+            // This demonstrates how you might expose an API that takes the id_token as a user identity claim.
+            function showUserInformation(idToken) {
+                // The /api/validateToken endpoint takes an id_token in the Authorization header and attempts
+                // to validate it as per (https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-token-and-claims#idtokens).
+                // If successful, it returns the decoded token. Otherwise it return an HTTP 401 Unauthorized response.
                 $.ajax({
                     url: window.location.origin + "/api/validateToken",
                     beforeSend: function(request) {
