@@ -25,8 +25,9 @@ import * as assert from "assert";
 import * as async from "async";
 import * as builder from "botbuilder";
 import * as mongodb from "mongodb";
-import * as winston from "winston";
 import { IBotExtendedStorage } from "./BotExtendedStorage";
+import { Logger } from "../utils/index";
+let logger = new Logger;
 
 // tslint:disable-next-line:variable-name
 const Fields = {
@@ -218,7 +219,7 @@ export class MongoDbBotStorage implements IBotExtendedStorage {
                 await this.botStateCollection.createIndex({ key: 1 });
                 await this.botStateCollection.createIndex({ lastUpdate: 1 });
             } catch (e) {
-                winston.error(`Error initializing MongoDB: ${e.message}`, e);
+                logger.error(`Error initializing MongoDB: ${e.message}`, e);
                 this.close();
                 this.initializePromise = null;
             }

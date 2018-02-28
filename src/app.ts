@@ -31,11 +31,12 @@ let path = require("path");
 import * as config from "config";
 import * as builder from "botbuilder";
 import * as msteams from "botbuilder-teams";
-import * as winston from "winston";
 import * as storage from "./storage";
 import * as providers from "./providers";
 import { AuthBot } from "./AuthBot";
+import { Logger } from "./utils/index";
 
+let logger = new Logger;
 let app = express();
 
 app.set("port", process.env.PORT || 3978);
@@ -79,7 +80,7 @@ let bot = new AuthBot(connector, botSettings, app);
 
 // Log bot errors
 bot.on("error", (error: Error) => {
-    winston.error(error.message, error);
+    logger.error(error.message, error);
 });
 
 // Configure bot routes
@@ -101,7 +102,7 @@ app.get("/ping", (req, res) => {
 // will print stacktrace
 if (app.get("env") === "development") {
     app.use(function(err: any, req: Request, res: Response, next: Function): void {
-        winston.error("Failed request", err);
+        logger.error("Failed request", err);
         res.send(err.status || 500, err);
     });
 }
@@ -109,10 +110,10 @@ if (app.get("env") === "development") {
 // production error handler
 // no stacktraces leaked to user
 app.use(function(err: any, req: Request, res: Response, next: Function): void {
-    winston.error("Failed request", err);
+    logger.error("Failed request", err);
     res.sendStatus(err.status || 500);
 });
 
 http.createServer(app).listen(app.get("port"), function (): void {
-    winston.verbose("Express server listening on port " + app.get("port"));
+    logger.verbose("Express server listening on port " + app.get("port"));
 });

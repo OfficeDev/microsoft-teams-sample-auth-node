@@ -45,14 +45,16 @@ gulp.task('clean', function () {
  * Lint all TypeScript files.
  */
 gulp.task('ts:lint', [], function () {
-    return gulp
-        .src(filesToLint)
-        .pipe(tslint({
-            formatter: 'verbose'
-        }))
-        .pipe(tslint.report({
-            summarizeFailureOutput: true
-        }));
+    if (!process.env.GLITCH_NO_LINT) {
+        return gulp
+            .src(filesToLint)
+            .pipe(tslint({
+                formatter: 'verbose'
+            }))
+            .pipe(tslint.report({
+                summarizeFailureOutput: true
+            }));
+      }
 });
 
 /**
