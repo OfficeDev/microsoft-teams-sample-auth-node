@@ -1,7 +1,7 @@
 {
     "app": {
         "baseUri": "https://example.com",
-        "instrumentationKey": ""
+        "appId": "<app_id>"
     },
     "bot": {
         "appId": "<app_id>",

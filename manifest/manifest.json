@@ -25,6 +25,22 @@
   "configurableTabs": [
   ],
   "staticTabs": [
+    {
+      "contentUrl": "https://<<BASE_URI_DOMAIN>>/tab/simple",
+      "entityId": "simpleAuth",
+      "name": "Simple Auth",
+      "scopes": [
+        "personal"
+      ]
+    },
+    {
+      "contentUrl": "https://<<BASE_URI_DOMAIN>>/tab/silent?upn={upn}",
+      "entityId": "silentAuth",
+      "name": "Silent Auth",
+      "scopes": [
+        "personal"
+      ]
+    }
   ],
   "bots": [
     {

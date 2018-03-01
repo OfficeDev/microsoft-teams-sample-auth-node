@@ -1,0 +1,194 @@
+<!--
+// Copyright (c) Microsoft Corporation
+// All rights reserved.
+//
+// MIT License:
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+-->
+
+<html>
+    <head>
+        <title>Silent Authentication Sample</title>
+    </head>
+    <body>
+        <p>
+            This sample demonstrates silent authentication in a Microsoft Teams tab.
+        </p>
+        <p>
+            The tab will try to get an id token for the user silently, validate the token and show the profile information decoded from the token.
+            The "Login" button will appear only if silent authentication failed.
+        </p>
+
+        <!-- Login button -->
+        <button id="btnLogin" onclick="login()" style="display: none">Login to Azure AD</button>
+
+        <!-- Result -->
+        <p>
+            <div id="divError" style="display: none"></div>
+            <div id="divProfile" style="display: none">
+                <div><b>Name:</b> <span id="profileDisplayName"/></div>
+                <div><b>UPN:</b> <span id="profileUpn"/></div>
+                <div><b>Object id:</b> <span id="profileObjectId"/></div>
+            </div>
+        </p>
+
+        <script src="https://code.jquery.com/jquery-3.1.1.js" integrity="sha384-VC7EHu0lDzZyFfmjTPJq+DFyIn8TUGAJbEtpXquazFVr00Q/OOx//RjiZ9yU9+9m" crossorigin="anonymous"></script>
+        <script src="https://statics.teams.microsoft.com/sdk/v1.2/js/MicrosoftTeams.min.js" integrity="sha384-OncOcMprEYFkUvhe15zi8VdCZIOcuNGnf4ilq2yTfDEjTwPF19V7pZrzxOq/iqt0" crossorigin="anonymous"></script>
+
+        <!-- Check before upgrading your ADAL version, as this sample depends on an internal function to authenticate silently -->
+        <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.15/js/adal.min.js" integrity="sha384-lIk8T3uMxKqXQVVfFbiw0K/Nq+kt1P3NtGt/pNexiDby2rKU6xnDY8p16gIwKqgI" crossorigin="anonymous"></script>
+        
+        <script type="text/javascript">
+            microsoftTeams.initialize();
+    
+            // Parse query parameters
+            let queryParams = getQueryParameters();
+            let upn = queryParams["upn"];
+
+            // ADAL.js configuration
+            let config = {
+                clientId: "{{appId}}",
+                redirectUri: window.location.origin + "/tab/silent-end",     // This should be in the list of redirect uris for the AAD app
+                cacheLocation: "localStorage",
+                navigateToLoginRequestUrl: false,
+            };
+
+            // Setup extra query parameters for ADAL
+            // - openid and profile scope adds profile information to the id_token
+            // - login_hint provides the expected user name
+            if (upn) {
+                config.extraQueryParameters = "scope=openid+profile&login_hint=" + encodeURIComponent(upn);
+            } else {
+                config.extraQueryParameters = "scope=openid+profile";              
+            }
+    
+            let authContext = new AuthenticationContext(config);
+    
+            // See if there's a cached user and it matches the expected user
+            let user = authContext.getCachedUser();
+            if (user) {
+                if (user.userName !== upn) {
+                    // User doesn't match, clear the cache
+                    authContext.clearCache();
+                }
+            }
+    
+            // Get the id token (which is the access token for resource = clientId)
+            let token = authContext.getCachedToken(config.clientId);
+            if (token) {
+                showUserInformation(token);
+            } else {
+                // No token, or token is expired
+                authContext._renewIdToken(function (err, idToken) {
+                    if (err) {
+                        console.log("Renewal failed: " + err);
+
+                        // Failed to get the token silently; show the login button
+                        $("#btnLogin").css({ display: "" });
+
+                        // You could attempt to launch the login popup here, but in browsers this could be blocked by
+                        // a popup blocker, in which case the login attempt will fail with the reason FailedToOpenWindow.
+                    } else {
+                        showUserInformation(idToken);
+                    }
+                });
+            }
+
+            // To get an access token to a resource like Graph,
+            //   1. Provide the resource id to getCachedToken 
+            //          authContext.getCachedToken("https://graph.microsoft.com")
+            //   2. Call _renewToken instead of _renewIdToken
+            //          authContext._renewToken("https://graph.microsoft.com", function(err, accessToken) { ... })
+    
+            // Login to Azure AD
+            function login() {
+                $("#divError").text("").css({ display: "none" });
+                $("#divProfile").css({ display: "none" });
+
+                microsoftTeams.authentication.authenticate({
+                    url: window.location.origin + "/tab/silent-start",
+                    width: 600,
+                    height: 535,
+                    successCallback: function (result) {
+                        // AuthenticationContext is a singleton
+                        let authContext = new AuthenticationContext();
+                        let idToken = authContext.getCachedToken(config.clientId);
+                        if (idToken) {
+                            showUserInformation(idToken);
+                        } else {
+                            console.error("Error getting cached id token. This should never happen.");                            
+                            // At this point we have to get the user involved, so show the login button
+                            $("#btnLogin").css({ display: "" });
+                        };
+                    },
+                    failureCallback: function (reason) {
+                        console.log("Login failed: " + reason);
+                        if (reason === "CancelledByUser" || reason === "FailedToOpenWindow") {
+                            console.log("Login was blocked by popup blocker or canceled by user.");
+                        }
+                        // At this point we have to get the user involved, so show the login button
+                        $("#btnLogin").css({ display: "" });
+
+                        $("#divError").text(reason).css({ display: "" });
+                        $("#divProfile").css({ display: "none" });
+                    }
+                });
+            }
+    
+            // Validate the provided id_token, and show the user information from claims in the id_token.
+            // This demonstrates how you might expose an API that takes the id_token as a user identity claim.
+            function showUserInformation(idToken) {
+                // The /api/validateToken endpoint takes an id_token in the Authorization header and attempts
+                // to validate it as per (https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-token-and-claims#idtokens).
+                // If successful, it returns the decoded token. Otherwise it return an HTTP 401 Unauthorized response.
+                $.ajax({
+                    url: window.location.origin + "/api/validateToken",
+                    beforeSend: function(request) {
+                        request.setRequestHeader("Authorization", "Bearer " + idToken);
+                    },
+                    success: function (token) {
+                        $("#profileDisplayName").text(token.name);
+                        $("#profileUpn").text(token.upn);
+                        $("#profileObjectId").text(token.oid);
+                        $("#divProfile").css({ display: "" });
+                        $("#divError").css({ display: "none" });
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
+                        $("#divError").text(errorThrown).css({ display: "" });
+                        $("#divProfile").css({ display: "none" });
+                    },
+                });
+            }
+
+            // Parse query parameters into key-value pairs
+            function getQueryParameters() {
+                let queryParams = {};
+                location.search.substr(1).split("&").forEach(function(item) {
+                    let s = item.split("="),
+                    k = s[0],
+                    v = s[1] && decodeURIComponent(s[1]);
+                    queryParams[k] = v;
+                });
+                return queryParams;
+            }
+        </script>
+    </body>
+</html>
