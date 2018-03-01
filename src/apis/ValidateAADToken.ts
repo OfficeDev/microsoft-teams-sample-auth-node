@@ -47,6 +47,7 @@ export class ValidateAADToken {
                 if (!key) {
                     console.error("Invalid signing key or OpenId metadata document");
                     res.sendStatus(500);
+                    return;
                 }
 
                 // Verify token
