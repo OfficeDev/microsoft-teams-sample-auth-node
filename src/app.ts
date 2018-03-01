@@ -29,7 +29,6 @@ let favicon = require("serve-favicon");
 let http = require("http");
 let path = require("path");
 import * as config from "config";
-import * as builder from "botbuilder";
 import * as msteams from "botbuilder-teams";
 import * as winston from "winston";
 import * as apis from "./apis";
@@ -62,7 +61,7 @@ switch (botStorageProvider) {
         botStorage = new storage.MongoDbBotStorage(config.get("mongoDb.botStateCollection"), config.get("mongoDb.connectionString"));
         break;
     case "memory":
-        botStorage = new builder.MemoryBotStorage();
+        botStorage = new storage.MemoryBotStorage();
         break;
     case "null":
         botStorage = new storage.NullBotStorage();
@@ -105,8 +104,12 @@ app.get("/tab/silent-start", (req, res) => { res.render("tab/silent/silent-start
 app.get("/tab/silent-end", (req, res) => { res.render("tab/silent/silent-end"); });
 
 let openIdMetadata = new apis.OpenIdMetadata("https://login.microsoftonline.com/common/.well-known/openid-configuration");
-app.route("/api", new apis.ValidateIdToken(openIdMetadata, appId).listen());    // Middleware to validate id_token
-app.get("/api/decodeToken", new apis.DecodeIdToken().listen());
+let validateIdToken = new apis.ValidateIdToken(openIdMetadata, appId).listen();     // Middleware to validate id_token
+app.get("/api/decodeToken", validateIdToken, new apis.DecodeIdToken().listen());
+app.get("/api/getProfiles", validateIdToken, async (req, res) => {
+    let profiles = await bot.getUserProfilesAsync(res.locals.token["oid"]);
+    res.status(200).send(profiles);
+});
 
 // Configure ping route
 app.get("/ping", (req, res) => {

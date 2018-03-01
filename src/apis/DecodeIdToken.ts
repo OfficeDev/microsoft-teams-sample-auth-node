@@ -22,27 +22,13 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import * as express from "express";
-import * as jwt from "jsonwebtoken";
 
 // Decode the id_token from AAD in the Authorization header
 export class DecodeIdToken {
 
     public listen(): express.RequestHandler {
         return (req: express.Request, res: express.Response) => {
-            // Get bearer token from Authorization header
-            let authHeaderMatch = /^Bearer (.*)/i.exec(req.headers["authorization"]);
-            if (!authHeaderMatch) {
-                console.error("No Authorization header provided");
-                res.sendStatus(401);
-                return;
-            }
-
-            // Note that this does not validate the token, as we have middleware that does that
-
-            // Decode token and return as response
-            const encodedToken = authHeaderMatch[1];
-            const decodedToken = jwt.decode(encodedToken, { complete: true });
-            res.status(200).send(decodedToken.payload);
+            res.status(200).send(res.locals.token);
         };
     }
 

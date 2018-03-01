@@ -48,6 +48,11 @@
                 <div><b>Object id:</b> <span id="profileObjectId"/></div>
             </div>
         </p>
+        <p>
+            <div id="divProfilesError" style="display: none"></div>
+            <div id="divProfiles" style="display: none">
+            </div>
+        </p>
 
         <script src="https://code.jquery.com/jquery-3.1.1.js" integrity="sha384-VC7EHu0lDzZyFfmjTPJq+DFyIn8TUGAJbEtpXquazFVr00Q/OOx//RjiZ9yU9+9m" crossorigin="anonymous"></script>
         <script src="https://statics.teams.microsoft.com/sdk/v1.2/js/MicrosoftTeams.min.js" integrity="sha384-OncOcMprEYFkUvhe15zi8VdCZIOcuNGnf4ilq2yTfDEjTwPF19V7pZrzxOq/iqt0" crossorigin="anonymous"></script>
@@ -174,6 +179,22 @@
                         console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
                         $("#divError").text(errorThrown).css({ display: "" });
                         $("#divProfile").css({ display: "none" });
+                    },
+                });
+
+                $.ajax({
+                    url: window.location.origin + "/api/getProfiles",
+                    beforeSend: function(request) {
+                        request.setRequestHeader("Authorization", "Bearer " + idToken);
+                    },
+                    success: function (profiles) {
+                        $("#divProfiles").text(profiles).css({ display: "" });
+                        $("#divProfilesError").css({ display: "none" });
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
+                        $("#divProfilesError").text(errorThrown).css({ display: "" });
+                        $("#divProfiles").css({ display: "none" });
                     },
                 });
             }

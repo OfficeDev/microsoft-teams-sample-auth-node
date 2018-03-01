@@ -60,7 +60,7 @@ export class ValidateIdToken {
                     clockTolerance: 300,
                 };
                 try {
-                    jwt.verify(encodedToken, key.key, verifyOptions);
+                    res.locals.token = jwt.verify(encodedToken, key.key, verifyOptions);
                     next();
                 } catch (e) {
                     console.error("Invalid bearer token", e);

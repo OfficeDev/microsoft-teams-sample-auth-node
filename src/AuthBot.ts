@@ -24,6 +24,8 @@
 import * as builder from "botbuilder";
 import * as msteams from "botbuilder-teams";
 import * as winston from "winston";
+import * as constants from "./constants";
+import * as storage from "./storage";
 import * as utils from "./utils";
 import { Request, Response } from "express";
 import { RootDialog } from "./dialogs/RootDialog";
@@ -134,6 +136,26 @@ export class AuthBot extends builder.UniversalBot {
                 providerName: provider.displayName,
             });
         }
+    }
+
+    // Get the user's profile information from all the identity providers that we have tokens for
+    public async getUserProfilesAsync(aadObjectId: string): Promise<any> {
+        let profiles = {};
+
+        let botStorage = this.get("storage") as storage.IBotExtendedStorage;
+        let userData = await botStorage.getUserDataByAadObjectIdAsync(aadObjectId);
+        if (userData) {
+            for (let providerName in constants.IdentityProvider) {
+                let token = utils.getUserTokenFromUserData(userData, providerName);
+                let provider = this.get(providerName) as IOAuth2Provider;
+                if (token && provider) {
+                    let profile = await provider.getProfileAsync(token.accessToken);
+                    profiles[providerName] = profile;
+                }
+            }
+        }
+
+        return profiles;
     }
 
     // Handle incoming invoke

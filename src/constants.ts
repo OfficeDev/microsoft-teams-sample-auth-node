@@ -27,7 +27,7 @@ export const invokeType = "invoke";
 
 // Identity providers
 // tslint:disable-next-line:variable-name
-export const IdentityProviders = {
+export const IdentityProvider = {
     linkedIn: "linkedIn",
     azureADv1: "azureADv1",
     google: "google",
