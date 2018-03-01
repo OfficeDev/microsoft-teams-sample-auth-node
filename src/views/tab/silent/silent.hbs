@@ -93,7 +93,7 @@
             // Get the id token (which is the access token for resource = clientId)
             let token = authContext.getCachedToken(config.clientId);
             if (token) {
-                showProfileInformation(token);
+                showUserInformation(token);
             } else {
                 // No token, or token is expired
                 authContext._renewIdToken(function (err, idToken) {
@@ -106,7 +106,7 @@
                         // You could attempt to launch the login popup here, but in browsers this could be blocked by
                         // a popup blocker, in which case the login attempt will fail with the reason FailedToOpenWindow.
                     } else {
-                        showProfileInformation(idToken);
+                        showUserInformation(idToken);
                     }
                 });
             }
@@ -155,11 +155,11 @@
             // Validate the provided id_token, and show the user information from claims in the id_token.
             // This demonstrates how you might expose an API that takes the id_token as a user identity claim.
             function showUserInformation(idToken) {
-                // The /api/validateToken endpoint takes an id_token in the Authorization header and attempts
-                // to validate it as per (https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-token-and-claims#idtokens).
+                // The /api/decodeToken endpoint takes an id_token in the Authorization header and validates it
+                // as per (https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-token-and-claims#idtokens).
                 // If successful, it returns the decoded token. Otherwise it return an HTTP 401 Unauthorized response.
                 $.ajax({
-                    url: window.location.origin + "/api/validateToken",
+                    url: window.location.origin + "/api/decodeToken",
                     beforeSend: function(request) {
                         request.setRequestHeader("Authorization", "Bearer " + idToken);
                     },

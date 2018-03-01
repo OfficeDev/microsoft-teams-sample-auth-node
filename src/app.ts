@@ -32,12 +32,13 @@ import * as config from "config";
 import * as builder from "botbuilder";
 import * as msteams from "botbuilder-teams";
 import * as winston from "winston";
-import * as storage from "./storage";
+import * as apis from "./apis";
 import * as providers from "./providers";
+import * as storage from "./storage";
 import { AuthBot } from "./AuthBot";
-import { ValidateAADToken } from "./apis/ValidateAADToken";
 
 let app = express();
+let appId = config.get("app.appId");
 
 app.set("port", process.env.PORT || 3978);
 app.use(express.static(path.join(__dirname, "../../public")));
@@ -47,7 +48,7 @@ app.use(bodyParser.json());
 let handlebars = exphbs.create({
     extname: ".hbs",
     helpers: {
-        appId: () => { return config.get("app.appId"); },
+        appId: () => { return appId; },
     },
 });
 app.engine("hbs", handlebars.engine);
@@ -102,7 +103,10 @@ app.get("/tab/simple-end", (req, res) => { res.render("tab/simple/simple-end"); 
 app.get("/tab/silent", (req, res) => { res.render("tab/silent/silent"); });
 app.get("/tab/silent-start", (req, res) => { res.render("tab/silent/silent-start"); });
 app.get("/tab/silent-end", (req, res) => { res.render("tab/silent/silent-end"); });
-app.get("/api/validateToken", ValidateAADToken.listen());
+
+let openIdMetadata = new apis.OpenIdMetadata("https://login.microsoftonline.com/common/.well-known/openid-configuration");
+app.route("/api", new apis.ValidateIdToken(openIdMetadata, appId).listen());    // Middleware to validate id_token
+app.get("/api/decodeToken", new apis.DecodeIdToken().listen());
 
 // Configure ping route
 app.get("/ping", (req, res) => {
