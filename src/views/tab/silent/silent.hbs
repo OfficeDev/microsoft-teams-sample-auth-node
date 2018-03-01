@@ -93,7 +93,7 @@
             // Get the id token (which is the access token for resource = clientId)
             let token = authContext.getCachedToken(config.clientId);
             if (token) {
-                showProfileInformation(token);
+                showUserInformation(token);
             } else {
                 // No token, or token is expired
                 authContext._renewIdToken(function (err, idToken) {
@@ -106,7 +106,7 @@
                         // You could attempt to launch the login popup here, but in browsers this could be blocked by
                         // a popup blocker, in which case the login attempt will fail with the reason FailedToOpenWindow.
                     } else {
-                        showProfileInformation(idToken);
+                        showUserInformation(idToken);
                     }
                 });
             }
