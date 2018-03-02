@@ -9,9 +9,9 @@
   "private": true,
   "main": "app.js",
   "scripts": {
-    "start": "cd ./build/src && node app.js",
+    "start": "node build/src/app.js",
     "build": "gulp build",
-    "debug": "cd ./build/src && node --debug app.js"
+    "debug": "node debug build/src/app.js"
   },
   "engines": {
     "node": "7.7.4"
