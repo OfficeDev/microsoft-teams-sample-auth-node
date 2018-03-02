@@ -103,13 +103,14 @@ export function validateVerificationCode(session: builder.Session, providerName:
             (tokenUnsafe.verificationCode === verificationCode) &&
             (tokenUnsafe.verificationCodeExpirationTime > Date.now())) {
             tokenUnsafe.verificationCodeValidated = true;
+            setUserToken(session, providerName, tokenUnsafe);
         } else {
             console.warn("Verification code does not match.");
+
+            // Clear out the token after the first failed attempt to validate
+            // to avoid brute-forcing the verification code
             setUserToken(session, providerName, null);
         }
-
-        // Save the token information back to userData
-        setUserToken(session, providerName, tokenUnsafe);
     } else {
         console.warn("Received unexpected login callback.");
     }

@@ -3,7 +3,7 @@
   "manifestVersion": "1.2",
   "version": "1.0",
   "id": "<<REGISTERED_BOT_ID>>",
-  "packageName": "com.microsoft.teams.samples.authbot",
+  "packageName": "com.microsoft.teams.samples.auth",
   "developer": {
     "name": "Your Name Here",
     "websiteUrl": "https://www.example.com",
@@ -14,14 +14,14 @@
     "short": "Teams AuthBot"
   },
   "description": {
-    "short": "Bot authentication sample for Microsoft Teams",
-    "full": "Bot authentication sample for Microsoft Teams"
+    "short": "Authentication sample for Microsoft Teams",
+    "full": "Authentication sample for Microsoft Teams"
   },
   "icons": {
-    "outline": "Logo_LinkedIn_20x20.png",
-    "color": "Logo_LinkedIn_96x96.png"
+    "outline": "outline.png",
+    "color": "color.png"
   },
-  "accentColor": "#0077B5",
+  "accentColor": "#F3F4F6",
   "configurableTabs": [
   ],
   "staticTabs": [
