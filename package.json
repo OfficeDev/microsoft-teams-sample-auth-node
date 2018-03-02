@@ -17,22 +17,22 @@
     "node": "7.7.4"
   },
   "dependencies": {
-    "async": "^2.5.0",
-    "body-parser": "^1.16.1",
-    "botbuilder": "^3.11.0",
+    "async": "^2.6.0",
+    "body-parser": "^1.18.2",
+    "botbuilder": "^3.14.0",
     "botbuilder-teams": "0.1.7",
-    "config": "^1.25.1",
+    "config": "^1.30.0",
     "debug": "~2.2.0",
-    "express": "~4.13.1",
+    "express": "^4.16.2",
     "express-handlebars": "^3.0.0",
-    "mongodb": "^2.2.24",
+    "mongodb": "^3.0.3",
     "querystring": "^0.2.0",
     "random-number-csprng": "^1.0.2",
     "request-promise": "^4.2.2",
     "serve-favicon": "^2.4.0",
-    "url-join": "^1.1.0",
-    "uuid": "^3.0.1",
-    "winston": "^2.3.1"
+    "url-join": "^4.0.0",
+    "uuid": "^3.2.1",
+    "winston": "^2.4.0"
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",

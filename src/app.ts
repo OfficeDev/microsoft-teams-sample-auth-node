@@ -34,9 +34,8 @@ import * as msteams from "botbuilder-teams";
 import * as storage from "./storage";
 import * as providers from "./providers";
 import { AuthBot } from "./AuthBot";
-import { Logger } from "./utils/index";
+import { logger } from "./utils/index";
 
-let logger = new Logger;
 let app = express();
 
 app.set("port", process.env.PORT || 3978);
@@ -116,4 +115,5 @@ app.use(function(err: any, req: Request, res: Response, next: Function): void {
 
 http.createServer(app).listen(app.get("port"), function (): void {
     logger.verbose("Express server listening on port " + app.get("port"));
+    logger.verbose("Bot messaging endpoint: " + config.get("app.baseUri") + "/api/messages");
 });

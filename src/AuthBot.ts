@@ -27,8 +27,7 @@ import * as utils from "./utils";
 import { Request, Response } from "express";
 import { RootDialog } from "./dialogs/RootDialog";
 import { IOAuth2Provider } from "./providers";
-import { Logger } from "./utils";
-let logger = new Logger;
+import { logger } from "./utils";
 
 // =========================================================
 // Auth Bot

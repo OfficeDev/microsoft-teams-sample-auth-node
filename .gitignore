@@ -63,6 +63,3 @@ src/config/custom-environment-variables.json
 # Generated files
 build/
 _package/
-
-# Manifest files
-manifest/

@@ -40,3 +40,5 @@ export class Logger extends winston.Logger {
         return new Date().toLocaleTimeString();
     }
 }
+
+export let logger = new Logger;

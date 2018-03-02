@@ -1,44 +1,40 @@
 ﻿{
-  "$schema": "https://statics.teams.microsoft.com/sdk/v1.2/manifest/MicrosoftTeams.schema.json",
+  "$schema": "https://statics.teams.microsoft.com/sdk/v1.1/manifest/MicrosoftTeams.schema.json",
   "manifestVersion": "1.2",
-  "version": "1.0",
-  "id": "<<REGISTERED_BOT_ID>>",
-  "packageName": "com.microsoft.teams.samples.auth",
+  "version": "0.0.1",
+  "id": "98f08689-d05a-4e86-8989-d45cc4a5f915",
+  "packageName": "com.microsoft.teams.authbot",
   "developer": {
-    "name": "Your Name Here",
-    "websiteUrl": "https://www.example.com",
-    "privacyUrl": "https://privacy.microsoft.com/PrivacyStatement",
-    "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement/"
-  },
-  "name": {
-    "short": "Teams AuthBot"
-  },
-  "description": {
-    "short": "Authentication sample for Microsoft Teams",
-    "full": "Authentication sample for Microsoft Teams"
+      "name": "Bill Bliss",
+      "websiteUrl": "https://teams.microsoft.com",
+      "privacyUrl": "https://privacy.microsoft.com/PrivacyStatement",
+      "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement/"
   },
   "icons": {
-    "outline": "outline.png",
-    "color": "color.png"
+      "color": "authbot.png",
+      "outline": "outline.png"
   },
-  "accentColor": "#F3F4F6",
-  "configurableTabs": [
-  ],
-  "staticTabs": [
-  ],
+  "name": {
+      "short": "AuthBot",
+      "full": "Authenticate seamlessly within Microsoft Teams."
+  },
+  "description": {
+      "short": "Demonstrates seamless, inline bot authentication.",
+      "full": "Demonstrates seamless, inline bot authentication."
+  },
+  "accentColor": "#FFFFFF",
   "bots": [
-    {
-      "botId": "<<REGISTERED_BOT_ID>>",
-      "scopes": [
-        "personal"
-      ]
-    }
+      {
+          "botId": "98f08689-d05a-4e86-8989-d45cc4a5f915",
+          "scopes": [
+              "team",
+              "personal"
+          ]
+      }
   ],
   "permissions": [
-    "messageTeamMembers",
-    "identity"
+      "identity",
+      "messageTeamMembers"
   ],
-  "validDomains": [
-    "<<BASE_URI_DOMAIN>>"
-  ]
+  "validDomains": [ "authbot.ngrok.io" ]
 }

@@ -24,8 +24,7 @@
 import urlJoin = require("url-join");
 import * as builder from "botbuilder";
 import * as request from "request";
-import { Logger } from "./Logger";
-let logger = new Logger;
+import { logger } from "./Logger";
 
 // Helpers for working with messages
 
