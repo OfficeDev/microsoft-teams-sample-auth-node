@@ -55,9 +55,14 @@ typings/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
+# environment variables file
 .env
+src/config/default.json
+src/config/custom-environment-variables.json
 
 # Generated files
 build/
 _package/
+
+# Manifest files
+manifest/
