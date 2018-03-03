@@ -36,5 +36,5 @@
       "identity",
       "messageTeamMembers"
   ],
-  "validDomains": [ "authbot.ngrok.io" ]
+  "validDomains": [ "authbot.ngrok.io", "msteams-authbot.azurewebsites.net" ]
 }
