@@ -1,3 +1,2 @@
 [config]
-WEBSITE_NODE_DEFAULT_VERSION = 7.7.4
 command = deploy.cmd
