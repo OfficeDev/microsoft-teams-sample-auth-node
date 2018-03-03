@@ -57,8 +57,6 @@ typings/
 
 # environment variables file
 .env
-src/config/default.json
-src/config/custom-environment-variables.json
 
 # Generated files
 build/

@@ -21,9 +21,9 @@
             "sourceMaps": true,
             "outFiles": [ "${workspaceRoot}/build/**/*.js" ],
             "env": {
-                "BASE_URI": "https://BASE_URI",
-                "MICROSOFT_APP_ID": "MICROSOFT_APP_ID",
-                "MICROSOFT_APP_PASSWORD": "MICROSOFT_APP_PASSWORD",
+                "BASE_URI": "https://authbot.ngrok.io",
+                "MICROSOFT_APP_ID": "98f08689-d05a-4e86-8989-d45cc4a5f915",
+                "MICROSOFT_APP_PASSWORD": "jqpfpKYSU0297$_efWUH7)^",
                 "LINKEDIN_CLIENT_ID": "LINKEDIN_CLIENT_ID",
                 "LINKEDIN_CLIENT_SECRET": "LINKEDIN_CLIENT_SECRET",
                 "GOOGLE_CLIENT_ID": "GOOGLE_CLIENT_ID",
