@@ -112,7 +112,7 @@ IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
 IF EXIST "%DEPLOYMENT_TARGET%\gulpfile.js" (
   echo Running gulp build.
   pushd "%DEPLOYMENT_TARGET%"
-  call :ExecuteCmd !NPM_CMD! run build
+  call :ExecuteCmd !NPM_CMD! --scripts-prepend-node-path run build
   IF !ERRORLEVEL! NEQ 0 goto error
   popd
 )
