@@ -44,8 +44,9 @@
             <div id="divError" style="display: none"></div>
             <div id="divProfile" style="display: none">
                 <div><b>Name:</b> <span id="profileDisplayName"/></div>
-                <div><b>UPN:</b> <span id="profileUpn"/></div>
                 <div><b>Object id:</b> <span id="profileObjectId"/></div>
+                <div><b>UPN:</b> <span id="profileUpn"/></div>
+                <div><b>Unique name:</b> <span id="profileUniqueName"/></div>
             </div>
         </p>
 
@@ -62,8 +63,13 @@
             let queryParams = getQueryParameters();
             let upn = queryParams["upn"];
 
+            // Use the tenant id of the current organization. For guest users, we want an access token for 
+            // the tenant we are currently in, not the home tenant of the guest. 
+            let tenantId = queryParams["tenantId"] || "common";
+
             // ADAL.js configuration
             let config = {
+                tenant: tenantId,
                 clientId: "{{appId}}",
                 redirectUri: window.location.origin + "/tab/silent-end",     // This should be in the list of redirect uris for the AAD app
                 cacheLocation: "localStorage",
@@ -165,8 +171,13 @@
                     },
                     success: function (token) {
                         $("#profileDisplayName").text(token.name);
-                        $("#profileUpn").text(token.upn);
                         $("#profileObjectId").text(token.oid);
+                        $("#profileUpn").text(token.upn);
+
+                        // The id token for a guest (external) user will not have a "upn" claim.
+                        // Instead it has a "unique_name" claim, which is the username in the home organization/identity provider.
+                        $("#profileUniqueName").text(token.unique_name);
+
                         $("#divProfile").css({ display: "" });
                         $("#divError").css({ display: "none" });
                     },
