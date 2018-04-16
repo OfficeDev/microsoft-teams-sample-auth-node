@@ -22,6 +22,7 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import * as builder from "botbuilder";
+import * as msteams from "botbuilder-teams";
 import * as constants from "../constants";
 import { AzureADv1Provider } from "../providers";
 import { BaseIdentityDialog } from "./BaseIdentityDialog";
@@ -33,6 +34,16 @@ export class AzureADv1Dialog extends BaseIdentityDialog
         super(constants.IdentityProviders.azureADv1, constants.DialogId.AzureADv1);
     }
 
+    // Get an authorization url for Azure AD
+    protected getAuthorizationUrl(session: builder.Session, state: string): string {
+        // For AzureAD, we need to generate an authorization URL specific to the current tenant.
+        // This is important for guest users, so we get an access token for the correct organization
+        // (i.e., the current tenant, not the home tenant of the guest user).
+        let azureADApi = this.authProvider as AzureADv1Provider;
+        let tenantId = msteams.TeamsMessage.getTenantId(session.message);
+        return azureADApi.getAuthorizationUrl(state, null, tenantId);
+    }
+
     // Show user profile
     protected async showUserProfile(session: builder.Session): Promise<void> {
         let azureADApi = this.authProvider as AzureADv1Provider;
@@ -42,8 +53,10 @@ export class AzureADv1Dialog extends BaseIdentityDialog
             let profile = await azureADApi.getProfileAsync(userToken.accessToken);
             let profileCard = new builder.ThumbnailCard()
                 .title(profile.displayName)
-                .subtitle(profile.mail)
-                .text(`${profile.jobTitle}<br/> ${profile.officeLocation}`);
+                .subtitle(profile.userPrincipalName)
+                .text(`<b>E-mail</b>: ${profile.mail}<br/>
+                       <b>Title</b>: ${profile.jobTitle}<br/>
+                       <b>Office location</b>: ${profile.officeLocation}`);
             session.send(new builder.Message().addAttachment(profileCard));
         } else {
             session.send("Please sign in to AzureAD so I can access your profile.");

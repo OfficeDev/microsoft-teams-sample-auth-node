@@ -30,7 +30,7 @@ import { UserToken, IOAuth2Provider } from "./OAuth2Provider";
 // AzureAD v1 API
 // =========================================================
 
-const authorizationUrl = "https://login.microsoftonline.com/common/oauth2/authorize";
+const authorizationUrl = "https://login.microsoftonline.com/{tenant}/oauth2/authorize";
 const accessTokenUrl = "https://login.microsoftonline.com/common/oauth2/token";
 const callbackPath = "/auth/azureADv1/callback";
 const graphProfileUrl = "https://graph.microsoft.com/v1.0/me";
@@ -51,7 +51,10 @@ export class AzureADv1Provider implements IOAuth2Provider {
     }
 
     // Return the url the user should navigate to to authenticate the app
-    public getAuthorizationUrl(state: string, extraParams?: any): string {
+    public getAuthorizationUrl(state: string, extraParams?: any, tenant?: string): string {
+        // Determine the tenant endpoint to use, defaulting to "common"
+        tenant = tenant || "common";
+
         let params = {
             response_type: "code",
             response_mode: "query",
@@ -63,7 +66,9 @@ export class AzureADv1Provider implements IOAuth2Provider {
         if (extraParams) {
             params = { ...extraParams, ...params };
         }
-        return authorizationUrl + "?" + querystring.stringify(params);
+
+        let authorizationUrlWithTenant = authorizationUrl.replace("{tenant}", tenant);
+        return authorizationUrlWithTenant + "?" + querystring.stringify(params);
     }
 
     // Redeem the authorization code for an access token
