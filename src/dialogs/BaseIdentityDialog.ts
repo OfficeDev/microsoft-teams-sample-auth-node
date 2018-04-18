@@ -84,6 +84,13 @@ export abstract class BaseIdentityDialog extends builder.IntentDialog
         session.send(msg);
     }
 
+    // Get an authorization url for the identity provider
+    // This allows derived dialogs to pass additional parameters to their identity provider implementation
+    // by overriding this method. See the implementation of AzureADv1Dialog.
+    protected getAuthorizationUrl(session: builder.Session, state: string): string {
+        return this.authProvider.getAuthorizationUrl(state);
+    }
+
     // Handle start of dialog
     private async onDialogBegin(session: builder.Session, args: any, next: () => void): Promise<void> {
         session.dialogData.isFirstTurn = true;
@@ -158,14 +165,22 @@ export abstract class BaseIdentityDialog extends builder.IntentDialog
             await this.promptForAction(session);
         } else {
             // Create the OAuth state, including a random anti-forgery state token
+            let address = session.message.address;
             let state = JSON.stringify({
                 securityToken: uuidv4(),
-                address: session.message.address,
+                address: {
+                    user: {
+                        id: address.user.id,
+                    },
+                    conversation: {
+                        id: address.conversation.id,
+                    },
+                },
             });
             utils.setOAuthState(session, this.providerName, state);
 
             // Create the authorization URL
-            let authUrl = this.authProvider.getAuthorizationUrl(state);
+            let authUrl = this.getAuthorizationUrl(session, state);
 
             // Build the sign-in url
             let signinUrl = config.get("app.baseUri") + `/html/auth-start.html?authorizationUrl=${encodeURIComponent(authUrl)}`;

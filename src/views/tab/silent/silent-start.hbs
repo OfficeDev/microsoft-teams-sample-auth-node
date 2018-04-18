@@ -38,6 +38,9 @@
             microsoftTeams.getContext(function (context) {
                 // ADAL.js configuration
                 let config = {
+                    // Use the tenant id of the current organization. For guest users, we want an access token for 
+                    // the tenant we are currently in, not the home tenant of the guest. 
+                    tenant: context.tid,
                     clientId: "{{appId}}",
                     redirectUri: window.location.origin + "/tab/silent-end",       // This should be in the list of redirect uris for the AAD app
                     cacheLocation: "localStorage",
