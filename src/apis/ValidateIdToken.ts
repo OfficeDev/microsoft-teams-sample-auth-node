@@ -62,6 +62,7 @@ export class ValidateIdToken {
                 };
                 try {
                     res.locals.token = jwt.verify(encodedToken, key.key, verifyOptions);
+                    res.locals.encodedToken = encodedToken;
                     next();
                 } catch (e) {
                     console.error("Invalid bearer token", e);

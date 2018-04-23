@@ -106,7 +106,8 @@ app.get("/tab/silent-end", (req, res) => { res.render("tab/silent/silent-end"); 
 let openIdMetadata = new apis.OpenIdMetadata("https://login.microsoftonline.com/common/.well-known/openid-configuration");
 let validateIdToken = new apis.ValidateIdToken(openIdMetadata, appId).listen();     // Middleware to validate id_token
 app.get("/api/decodeToken", validateIdToken, new apis.DecodeIdToken().listen());
-app.get("/api/getProfiles", validateIdToken, async (req, res) => {
+app.get("/api/getProfileFromGraph", validateIdToken, new apis.GetProfileFromGraph(config.get("app.appId"), config.get("app.appPassword")).listen());
+app.get("/api/getProfilesFromBot", validateIdToken, async (req, res) => {
     let profiles = await bot.getUserProfilesAsync(res.locals.token["oid"]);
     res.status(200).send(profiles);
 });
