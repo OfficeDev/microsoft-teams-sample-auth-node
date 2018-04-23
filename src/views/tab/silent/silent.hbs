@@ -32,33 +32,27 @@
             This sample demonstrates silent authentication in a Microsoft Teams tab.
         </p>
         <p>
-            The tab will try to get an id token for the user silently, validate the token and show the profile information decoded from the token.
+            The tab will try to get an id token for the user silently and information about the user.
             The "Login" button will appear only if silent authentication failed.
         </p>
 
         <!-- Login button -->
         <button id="btnLogin" onclick="login()" style="display: none">Login to Azure AD</button>
 
+        <p id="divError" style="display: none" class="auth-data"></p>
+
         <!-- Result -->
-        <p>
-            <div id="divError" style="display: none"></div>
-            <div id="divProfile" style="display: none">
-                <div><b>Name:</b> <span id="profileDisplayName"/></div>
-                <div><b>Object id:</b> <span id="profileObjectId"/></div>
-                <div><b>UPN:</b> <span id="profileUpn"/></div>
-                <div><b>Unique name:</b> <span id="profileUniqueName"/></div>
-            </div>
-        </p>
-        <p>
-            <div id="divGraphProfileError" style="display: none"></div>
-            <div id="divGraphProfile" style="display: none">
-            </div>
-        </p>
-        <p>
-            <div id="divBotProfilesError" style="display: none"></div>
-            <div id="divBotProfiles" style="display: none">
-            </div>
-        </p>
+        <h2>Claims from id_token</h2>
+        <div id="divIdTokenError" style="display: none" class="auth-data"></div>
+        <div id="divIdTokenClaims" style="display: none" class="auth-data"></div>
+
+        <h2>Profile from Microsoft Graph (via On-Behalf-Of flow)</h2>
+        <div id="divGraphProfileError" style="display: none" class="auth-data"></div>
+        <div id="divGraphProfile" style="display: none" class="auth-data"></div>
+
+        <h2>Profile from account(s) linked through the bot</h2>
+        <div id="divBotProfilesError" style="display: none" class="auth-data"></div>
+        <div id="divBotProfiles" style="display: none" class="auth-data"></div>
 
         <script src="https://code.jquery.com/jquery-3.1.1.js" integrity="sha384-VC7EHu0lDzZyFfmjTPJq+DFyIn8TUGAJbEtpXquazFVr00Q/OOx//RjiZ9yU9+9m" crossorigin="anonymous"></script>
         <script src="https://statics.teams.microsoft.com/sdk/v1.2/js/MicrosoftTeams.min.js" integrity="sha384-OncOcMprEYFkUvhe15zi8VdCZIOcuNGnf4ilq2yTfDEjTwPF19V7pZrzxOq/iqt0" crossorigin="anonymous"></script>
@@ -134,8 +128,7 @@
     
             // Login to Azure AD
             function login() {
-                $("#divError").text("").css({ display: "none" });
-                $("#divProfile").css({ display: "none" });
+                $(".auth-data").css({ display: "none" });
 
                 microsoftTeams.authentication.authenticate({
                     url: window.location.origin + "/tab/silent-start",
@@ -161,8 +154,8 @@
                         // At this point we have to get the user involved, so show the login button
                         $("#btnLogin").css({ display: "" });
 
+                        $(".auth-data").css({ display: "none" });
                         $("#divError").text(reason).css({ display: "" });
-                        $("#divProfile").css({ display: "none" });
                     }
                 });
             }
@@ -181,21 +174,26 @@
                         request.setRequestHeader("Authorization", "Bearer " + idToken);
                     },
                     success: function (token) {
-                        $("#profileDisplayName").text(token.name);
-                        $("#profileObjectId").text(token.oid);
-                        $("#profileUpn").text(token.upn);
+                        let claimsDiv = $("#divIdTokenClaims");
+                        claimsDiv.empty();
+
+                        for (let claimId in token) {
+                            $("<div>")
+                                .append($("<b>").text(claimId + ": "))
+                                .append($("<span>").text(token[claimId]))
+                                .appendTo(claimsDiv);
+                        }
 
                         // The id token for a guest (external) user will not have a "upn" claim.
                         // Instead it has a "unique_name" claim, which is the username in the home organization/identity provider.
-                        $("#profileUniqueName").text(token.unique_name);
 
-                        $("#divProfile").css({ display: "" });
-                        $("#divError").css({ display: "none" });
+                        $("#divIdTokenClaims").css({ display: "" });
+                        $("#divIdTokenError").css({ display: "none" });
                     },
                     error: function (xhr, textStatus, errorThrown) {
                         console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
-                        $("#divError").text(errorThrown).css({ display: "" });
-                        $("#divProfile").css({ display: "none" });
+                        $("#divIdTokenError").text(errorThrown).css({ display: "" });
+                        $("#divIdTokenClaims").css({ display: "none" });
                     },
                 });
 
@@ -208,7 +206,19 @@
                         request.setRequestHeader("Authorization", "Bearer " + idToken);
                     },
                     success: function (profile) {
-                        $("#divGraphProfile").text(JSON.stringify(profile)).css({ display: "" });
+                        let profileDiv = $("#divGraphProfile");
+                        profileDiv.empty();
+
+                        for (let key in profile) {
+                            if ((key[0] !== "@") && profile[key]) {
+                                $("<div>")
+                                    .append($("<b>").text(key + ": "))
+                                    .append($("<span>").text(profile[key]))
+                                    .appendTo(profileDiv);
+                            }
+                        }
+
+                        $("#divGraphProfile").css({ display: "" });
                         $("#divGraphProfileError").css({ display: "none" });
                     },
                     error: function (xhr, textStatus, errorThrown) {
@@ -229,7 +239,29 @@
                         request.setRequestHeader("Authorization", "Bearer " + idToken);
                     },
                     success: function (profiles) {
-                        $("#divBotProfiles").text(JSON.stringify(profiles)).css({ display: "" });
+                        let profilesDiv = $("#divBotProfiles");
+                        profilesDiv.empty();
+
+                        if (Object.keys(profiles).length === 0) {
+                            profilesDiv.text("No accounts linked");
+                        } else {
+                            for (let profileName in profiles) {
+                                profilesDiv.append($("<h3>").text(profileName));
+
+                                let profile = profiles[profileName];
+                                for (let key in profile) {
+                                    let value = profile[key];
+                                    if ((key[0] !== "@") && value) {
+                                        $("<div>")
+                                            .append($("<b>").text(key + ": "))
+                                            .append($("<span>").text((value instanceof Object) ?  JSON.stringify(value) : value))
+                                            .appendTo(profilesDiv);
+                                    }
+                                }
+                            }
+                        }
+
+                        $("#divBotProfiles").css({ display: "" });
                         $("#divBotProfilesError").css({ display: "none" });
                     },
                     error: function (xhr, textStatus, errorThrown) {
