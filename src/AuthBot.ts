@@ -150,7 +150,7 @@ export class AuthBot extends builder.UniversalBot {
                 let provider = this.get(providerName) as IOAuth2Provider;
                 if (token && provider) {
                     let profile = await provider.getProfileAsync(token.accessToken);
-                    profiles[providerName] = profile;
+                    profiles[provider.displayName] = profile;
                 }
             }
         }
