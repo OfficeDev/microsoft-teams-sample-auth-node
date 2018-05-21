@@ -96,6 +96,7 @@ IF /I "%IN_PLACE_DEPLOYMENT%" NEQ "1" (
 
 :: 2. Select node version
 call :SelectNodeVersion
+call :ExecuteCmd !NPM_CMD! config set scripts-prepend-node-path true
 
 :: 3. Install npm packages (including dev dependencies)
 IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
@@ -112,7 +113,7 @@ IF EXIST "%DEPLOYMENT_TARGET%\package.json" (
 IF EXIST "%DEPLOYMENT_TARGET%\gulpfile.js" (
   echo Running gulp build.
   pushd "%DEPLOYMENT_TARGET%"
-  call :ExecuteCmd .\node_modules\.bin\gulp build
+  call :ExecuteCmd !NPM_CMD! run build
   IF !ERRORLEVEL! NEQ 0 goto error
   popd
 )
