@@ -116,7 +116,7 @@ app.get("/ping", (req, res) => {
 if (app.get("env") === "development") {
     app.use(function(err: any, req: Request, res: Response, next: Function): void {
         winston.error("Failed request", err);
-        res.send(err.status || 500, err);
+        res.status(err.status || 500).send(err);
     });
 }
 

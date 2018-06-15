@@ -49,7 +49,7 @@
                     // Setup extra query parameters for ADAL
                     // - openid and profile scope adds profile information to the id_token
                     // - login_hint provides the expected user name
-                    extraQueryParameter: "scope=openid+profile&login_hint=" + encodeURIComponent(context.upn),
+                    extraQueryParameter: "scope=openid+profile&login_hint=" + encodeURIComponent(context.loginHint),
                 };
     
                 // Use a custom displayCall function to add extra query parameters to the url before navigating to it
