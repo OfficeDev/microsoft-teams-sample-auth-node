@@ -61,7 +61,8 @@
     
             // Parse query parameters
             let queryParams = getQueryParameters();
-            let upn = queryParams["upn"];
+            let loginHint = queryParams["loginHint"];
+            let userObjectId = queryParams["userObjectId"];
 
             // Use the tenant id of the current organization. For guest users, we want an access token for 
             // the tenant we are currently in, not the home tenant of the guest. 
@@ -79,10 +80,10 @@
             // Setup extra query parameters for ADAL
             // - openid and profile scope adds profile information to the id_token
             // - login_hint provides the expected user name
-            if (upn) {
-                config.extraQueryParameters = "scope=openid+profile&login_hint=" + encodeURIComponent(upn);
+            if (loginHint) {
+                config.extraQueryParameter = "scope=openid+profile&login_hint=" + encodeURIComponent(loginHint);
             } else {
-                config.extraQueryParameters = "scope=openid+profile";              
+                config.extraQueryParameter = "scope=openid+profile";              
             }
     
             let authContext = new AuthenticationContext(config);
@@ -90,7 +91,7 @@
             // See if there's a cached user and it matches the expected user
             let user = authContext.getCachedUser();
             if (user) {
-                if (user.userName !== upn) {
+                if (user.profile.oid !== userObjectId) {
                     // User doesn't match, clear the cache
                     authContext.clearCache();
                 }
