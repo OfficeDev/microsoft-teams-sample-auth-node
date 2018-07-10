@@ -29,6 +29,7 @@
     "querystring": "^0.2.0",
     "random-number-csprng": "^1.0.2",
     "request-promise": "^4.2.2",
+    "rsa-pem-from-mod-exp": "^0.8.4",
     "serve-favicon": "^2.4.0",
     "url-join": "^4.0.0",
     "uuid": "^3.2.1",

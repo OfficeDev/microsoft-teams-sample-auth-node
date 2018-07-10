@@ -25,6 +25,8 @@ Registering a bot with the Microsoft Bot Framework automatically creates a corre
 2. Find your application in the list and click on the name to edit.
 3. Click on "Add platform", choose "Web", then add the following redirect URLs:
      * `https://<your_ngrok_url>/auth/azureADv1/callback`
+     * `https://<your_ngrok_url>/tab/simple-end`
+     * `https://<your_ngrok_url>/tab/silent-end`
 4. Scroll to the bottom of the page and click on "Save".
 5. The bot uses `MICROSOFT_APP_ID` and `MICROSOFT_APP_PASSWORD`, so these should already be set. No further changes needed!
 
