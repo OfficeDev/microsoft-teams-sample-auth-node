@@ -128,8 +128,8 @@ gulp.task('package', ['build'], function () {
 });
 
 gulp.task('server:start', ['build'], function() {
-    server.listen({path: 'build/src/app.js'}, function(error) {
-        console.log(error);
+    server.listen({path: 'app.js', cwd: 'build/src'}, function(error) {
+        console.error(error);
     });
 });
 

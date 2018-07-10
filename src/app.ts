@@ -35,6 +35,7 @@ import * as storage from "./storage";
 import * as providers from "./providers";
 import { AuthBot } from "./AuthBot";
 import { logger } from "./utils/index";
+import { ValidateAADToken } from "./apis/ValidateAADToken";
 
 let app = express();
 
@@ -45,6 +46,9 @@ app.use(bodyParser.json());
 
 let handlebars = exphbs.create({
     extname: ".hbs",
+    helpers: {
+        appId: () => { return config.get("app.appId"); },
+    },
 });
 app.engine("hbs", handlebars.engine);
 app.set("view engine", "hbs");
@@ -85,10 +89,20 @@ bot.on("error", (error: Error) => {
 // Configure bot routes
 app.post("/api/messages", connector.listen());
 
-// Configure auth routes
+// Configure auth callback routes
 app.get("/auth/:provider/callback", (req, res) => {
     bot.handleOAuthCallback(req, res, req.params["provider"]);
 });
+
+// Tab authentication sample routes
+app.get("/tab/simple", (req, res) => { res.render("tab/simple/simple"); });
+app.get("/tab/simple-start", (req, res) => { res.render("tab/simple/simple-start"); });
+app.get("/tab/simple-start-v2", (req, res) => { res.render("tab/simple/simple-start-v2"); });
+app.get("/tab/simple-end", (req, res) => { res.render("tab/simple/simple-end"); });
+app.get("/tab/silent", (req, res) => { res.render("tab/silent/silent"); });
+app.get("/tab/silent-start", (req, res) => { res.render("tab/silent/silent-start"); });
+app.get("/tab/silent-end", (req, res) => { res.render("tab/silent/silent-end"); });
+app.get("/api/validateToken", ValidateAADToken.listen());
 
 // Configure ping route
 app.get("/ping", (req, res) => {
@@ -102,7 +116,7 @@ app.get("/ping", (req, res) => {
 if (app.get("env") === "development") {
     app.use(function(err: any, req: Request, res: Response, next: Function): void {
         logger.error("Failed request", err);
-        res.send(err.status || 500, err);
+        res.status(err.status || 500, err).send(err);
     });
 }
 
