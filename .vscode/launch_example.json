@@ -63,7 +63,7 @@
                 "LINKEDIN_CLIENT_SECRET": "LINKEDIN_CLIENT_SECRET",
                 "GOOGLE_CLIENT_ID": "GOOGLE_CLIENT_ID",
                 "GOOGLE_CLIENT_SECRET": "GOOGLE_CLIENT_ID",
-                "NODE_DEBUG": "botbuilder",
+                "NODE_DEBUG": "botbuilder"
             }
         }
     ]
