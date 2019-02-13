@@ -107,7 +107,7 @@
             } else {
                 // No token, or token is expired
                 // First, verify that we are renewing the right user's token
-                if (user.profile.id === userObjectId) {
+                if (user.profile.oid === userObjectId) {
                     authContext._renewIdToken(function (err, idToken) {
                         if (err) {
                             console.log("Renewal failed: " + err);
