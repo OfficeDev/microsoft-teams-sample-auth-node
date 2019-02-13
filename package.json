@@ -22,7 +22,6 @@
     "botbuilder": "^3.14.0",
     "botbuilder-teams": "0.1.7",
     "config": "^1.30.0",
-    "debug": "~2.2.0",
     "express": "^4.16.2",
     "express-handlebars": "^3.0.0",
     "mongodb": "^3.0.3",
@@ -33,7 +32,7 @@
     "serve-favicon": "^2.4.0",
     "url-join": "^4.0.0",
     "uuid": "^3.2.1",
-    "winston": "^2.4.0"
+    "winston": "^3.0.0"
   },
   "devDependencies": {
     "@types/chai": "^3.4.34",
@@ -43,6 +42,7 @@
     "@types/winston": "^2.3.2",
     "assert": "^1.3.0",
     "chai": "^3.5.0",
+    "debug": "^4.1.1",
     "del": "^2.2.2",
     "fs": "0.0.1-security",
     "gulp": "^3.9.0",

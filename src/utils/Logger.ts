@@ -23,22 +23,11 @@
 
 import * as winston from "winston";
 
-export class Logger extends winston.Logger {
-    constructor() {
-        super();
-        this.add(
-            winston.transports.Console,
-            {
-                timestamp: this.tsFormat,
-                colorize: (process.env.MONOCHROME_CONSOLE) ? false : true,
-                level: "debug",
-            },
-        );
-    }
-
-    private tsFormat(): string {
-        return new Date().toLocaleTimeString();
-    }
-}
-
-export let logger = new Logger;
+export const logger = winston.createLogger({
+    format: winston.format.combine(
+        winston.format.colorize(),
+    ),
+    transports: [
+        new winston.transports.Console(),
+    ],
+});

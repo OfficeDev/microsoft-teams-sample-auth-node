@@ -83,6 +83,15 @@ gulp.task('statics:copy', ['clean'], function () {
 gulp.task('build', ['clean', 'ts:lint', 'ts', 'statics:copy']);
 
 /**
+ * Build manifest
+ */
+gulp.task('generate-manifest', function() {
+    gulp.src(['./manifest/*.png', 'manifest/manifest.json'])
+        .pipe(zip('AuthBot.zip'))
+        .pipe(gulp.dest('manifest'));
+});
+
+/**
  * Run tests.
  */
 gulp.task('test', ['ts', 'statics:copy'], function() {
