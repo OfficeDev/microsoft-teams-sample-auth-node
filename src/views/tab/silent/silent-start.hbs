@@ -52,16 +52,6 @@
                     extraQueryParameter: "scope=openid+profile&login_hint=" + encodeURIComponent(context.loginHint),
                 };
     
-                // Use a custom displayCall function to add extra query parameters to the url before navigating to it
-                config.displayCall = function (urlNavigate) {
-                    if (urlNavigate) {
-                        if (config.extraQueryParameter) {
-                            urlNavigate += "&" + config.extraQueryParameter;
-                        }
-                        window.location.replace(urlNavigate);
-                    }
-                }
-
                 // Navigate to the AzureAD login page        
                 let authContext = new AuthenticationContext(config);
                 authContext.login();
