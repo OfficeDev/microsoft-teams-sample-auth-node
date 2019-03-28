@@ -23,13 +23,13 @@
 
 import * as builder from "botbuilder";
 import * as msteams from "botbuilder-teams";
-import * as winston from "winston";
 import * as constants from "./constants";
 import * as storage from "./storage";
 import * as utils from "./utils";
 import { Request, Response } from "express";
 import { RootDialog } from "./dialogs/RootDialog";
 import { IOAuth2Provider } from "./providers";
+import { logger } from "./utils";
 
 // =========================================================
 // Auth Bot
@@ -52,7 +52,7 @@ export class AuthBot extends builder.UniversalBot {
             try {
                 await this.onInvoke(event, cb);
             } catch (e) {
-                winston.error("Invoke handler failed", e);
+                logger.error("Invoke handler failed", e);
                 cb(e, null, 500);
             }
         });
@@ -60,7 +60,7 @@ export class AuthBot extends builder.UniversalBot {
             try {
                 await this.onInvoke(event, cb);
             } catch (e) {
-                winston.error("Signin state verification handler failed", e);
+                logger.error("Signin state verification handler failed", e);
                 cb(e, null, 500);
             }
         });
@@ -93,7 +93,7 @@ export class AuthBot extends builder.UniversalBot {
                 user: address.user,
             });
         } catch (e) {
-            winston.warn("Failed to get address from OAuth state", e);
+            logger.warn("Failed to get address from OAuth state", e);
         }
 
         if (session &&
@@ -111,10 +111,10 @@ export class AuthBot extends builder.UniversalBot {
 
                 verificationCode = userToken.verificationCode;
             } catch (e) {
-                winston.error("Failed to redeem code for an access token", e);
+                logger.error("Failed to redeem code for an access token", e);
             }
         } else {
-            winston.warn("State does not match expected state parameter, or user denied authorization");
+            logger.warn("State does not match expected state parameter, or user denied authorization");
         }
 
         // Render the page shown to the user

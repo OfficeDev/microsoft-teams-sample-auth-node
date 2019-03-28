@@ -42,25 +42,15 @@
                     scope: "https://graph.microsoft.com/User.Read openid",
                     redirect_uri: window.location.origin + "/tab/simple-end",
                     nonce: _guid(),
-                    state: state
+                    state: state,
+                    login_hint: context.loginHint,
                 };
-
-                // login_hint pre-fills the username/email address field of the sign in page for the user, 
-                // if you know their username ahead of time.
-                if (!isExternalUpn(context.upn)) {
-                    queryParams.login_hint = context.upn;
-                }
 
                 // Go to the AzureAD authorization endpoint (tenant-specific endpoint, not "common")
                 // For guest users, we want an access token for the tenant we are currently in, not the home tenant of the guest. 
-                let authorizeEndpoint = `https://login.microsoftonline.com/${context.tid}/oauth2/v2.0/authorize?` + toQueryString(queryParams);
+                let authorizeEndpoint = "https://login.microsoftonline.com/" + context.tid + "/oauth2/v2.0/authorize?" + toQueryString(queryParams);
                 window.location.assign(authorizeEndpoint);
             });
-
-            // Determine if UPN is externally authenticated (e.g., guest user)
-            function isExternalUpn(upn) {
-                return (upn.indexOf("#EXT#@") >= 0); 
-            }
 
             // Build query string from map of query parameter
             function toQueryString(queryParams) {

@@ -51,8 +51,8 @@
             "type": "node",
             "request": "launch",
             "name": "Launch (no build)",
-            "program": "${workspaceRoot}\\build\\src\\app.js",
-            "cwd": "${workspaceRoot}\\build\\src",
+            "program": "${workspaceRoot}/build/src/app.js",
+            "cwd": "${workspaceRoot}/build/src",
             "sourceMaps": true,
             "outFiles": [ "${workspaceRoot}/build/src/**/*.js" ],
             "env": {
@@ -63,7 +63,7 @@
                 "LINKEDIN_CLIENT_SECRET": "LINKEDIN_CLIENT_SECRET",
                 "GOOGLE_CLIENT_ID": "GOOGLE_CLIENT_ID",
                 "GOOGLE_CLIENT_SECRET": "GOOGLE_CLIENT_ID",
-                "NODE_DEBUG": "botbuilder",
+                "NODE_DEBUG": "botbuilder"
             }
         }
     ]

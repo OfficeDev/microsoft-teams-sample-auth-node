@@ -45,14 +45,16 @@ gulp.task('clean', function () {
  * Lint all TypeScript files.
  */
 gulp.task('ts:lint', [], function () {
-    return gulp
-        .src(filesToLint)
-        .pipe(tslint({
-            formatter: 'verbose'
-        }))
-        .pipe(tslint.report({
-            summarizeFailureOutput: true
-        }));
+    if (!process.env.GLITCH_NO_LINT) {
+        return gulp
+            .src(filesToLint)
+            .pipe(tslint({
+                formatter: 'verbose'
+            }))
+            .pipe(tslint.report({
+                summarizeFailureOutput: true
+            }));
+      }
 });
 
 /**
@@ -79,6 +81,15 @@ gulp.task('statics:copy', ['clean'], function () {
  * Build application.
  */
 gulp.task('build', ['clean', 'ts:lint', 'ts', 'statics:copy']);
+
+/**
+ * Build manifest
+ */
+gulp.task('generate-manifest', function() {
+    gulp.src(['./manifest/*.png', 'manifest/manifest.json'])
+        .pipe(zip('AuthBot.zip'))
+        .pipe(gulp.dest('manifest'));
+});
 
 /**
  * Run tests.
@@ -126,8 +137,8 @@ gulp.task('package', ['build'], function () {
 });
 
 gulp.task('server:start', ['build'], function() {
-    server.listen({path: 'build/src/app.js'}, function(error) {
-        console.log(error);
+    server.listen({path: 'app.js', cwd: 'build/src'}, function(error) {
+        console.error(error);
     });
 });
 

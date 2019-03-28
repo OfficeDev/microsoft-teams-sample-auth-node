@@ -36,7 +36,7 @@ export class ValidateIdToken {
     public listen(): express.RequestHandler {
         return (req: express.Request, res: express.Response, next: any) => {
             // Get bearer token
-            let authHeaderMatch = /^Bearer (.*)/i.exec(req.headers["authorization"]);
+            let authHeaderMatch = /^Bearer (.*)/i.exec(req.header("authorization"));
             if (!authHeaderMatch) {
                 console.error("No Authorization header provided");
                 res.sendStatus(401);
@@ -46,7 +46,7 @@ export class ValidateIdToken {
             // Decode token and get signing key
             const encodedToken = authHeaderMatch[1];
             const decodedToken = jwt.decode(encodedToken, { complete: true });
-            this.openIdMetadata.getKey(decodedToken.header.kid, (key) => {
+            this.openIdMetadata.getKey(decodedToken["header"].kid, (key) => {
                 if (!key) {
                     console.error("Invalid signing key or OpenId metadata document");
                     res.sendStatus(500);
@@ -56,7 +56,7 @@ export class ValidateIdToken {
                 // Verify token
                 const verifyOptions: jwt.VerifyOptions = {
                     algorithms: ["RS256", "RS384", "RS512"],
-                    issuer: this.openIdMetadata.getIssuer(decodedToken.payload.tid),
+                    issuer: this.openIdMetadata.getIssuer(decodedToken["payload"].tid),
                     audience: this.appId,
                     clockTolerance: 300,
                 };

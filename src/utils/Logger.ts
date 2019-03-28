@@ -21,8 +21,13 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// Re-export types from files in utils
+import * as winston from "winston";
 
-export * from "./MessageUtils";
-export * from "./AuthenticationUtils";
-export * from "./Logger";
+export const logger = winston.createLogger({
+    format: winston.format.combine(
+        winston.format.colorize(),
+    ),
+    transports: [
+        new winston.transports.Console(),
+    ],
+});

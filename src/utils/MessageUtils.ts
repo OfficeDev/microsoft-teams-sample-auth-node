@@ -24,7 +24,7 @@
 import urlJoin = require("url-join");
 import * as builder from "botbuilder";
 import * as request from "request";
-import * as winston from "winston";
+import { logger } from "./Logger";
 
 // Helpers for working with messages
 
@@ -207,7 +207,7 @@ export async function startReplyChain(chatConnector: builder.ChatConnector, mess
 }
 
 // Send an authenticated request
-async function sendRequestWithAccessToken(chatConnector: builder.ChatConnector, options: request.Options): Promise<any> {
+async function sendRequestWithAccessToken(chatConnector: builder.ChatConnector, options: request.OptionsWithUrl): Promise<any> {
     // Add access token
     await addAccessToken(chatConnector, options);
 
@@ -281,10 +281,10 @@ export function loadSessionAsync(bot: builder.UniversalBot, event: builder.IEven
     return new Promise((resolve, reject) => {
         bot.loadSession(event.address, (err: any, session: builder.Session) => {
             if (err) {
-                winston.error("Failed to load session", { error: err, address: event.address });
+                logger.error("Failed to load session", { error: err, address: event.address });
                 reject(err);
             } else if (!session) {
-                winston.error("Loaded null session", { address: event.address });
+                logger.error("Loaded null session", { address: event.address });
                 reject(new Error("Failed to load session"));
             } else {
                 let locale = getLocale(event);
@@ -293,7 +293,7 @@ export function loadSessionAsync(bot: builder.UniversalBot, event: builder.IEven
                     session.localizer.load(locale, (err2) => {
                         // Log errors but resolve session anyway
                         if (err2) {
-                            winston.error(`Failed to load localizer for ${locale}`, err2);
+                            logger.error(`Failed to load localizer for ${locale}`, err2);
                         }
                         resolve(session);
                     });
