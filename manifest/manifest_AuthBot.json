@@ -11,7 +11,7 @@
     "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement/"
   },
   "name": {
-    "short": "AuthBot"
+    "short": "Teams AuthBot"
   },
   "description": {
     "short": "Authentication sample for Microsoft Teams",
