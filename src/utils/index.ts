@@ -25,3 +25,4 @@
 
 export * from "./MessageUtils";
 export * from "./AuthenticationUtils";
+export * from "./Logger";

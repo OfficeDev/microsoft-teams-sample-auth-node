@@ -1,7 +1,8 @@
 {
     "app": {
         "baseUri": "BASE_URI",
-        "appId": "MICROSOFT_APP_ID"
+        "appId": "MICROSOFT_APP_ID",
+        "appPassword": "MICROSOFT_APP_PASSWORD"
     },
     "bot": {
         "appId": "MICROSOFT_APP_ID",

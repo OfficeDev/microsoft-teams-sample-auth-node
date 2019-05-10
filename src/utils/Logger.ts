@@ -21,30 +21,13 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// Activity types
-export const messageType = "message";
-export const invokeType = "invoke";
+import * as winston from "winston";
 
-// Identity providers
-// tslint:disable-next-line:variable-name
-export const IdentityProvider = {
-    linkedIn: "linkedIn",
-    azureADv1: "azureADv1",
-    google: "google",
-};
-
-// Dialog ids
-// tslint:disable-next-line:variable-name
-export const DialogId = {
-    LinkedIn: "LinkedIn",
-    AzureADv1: "AzureADv1",
-    Google: "Google",
-    Root: "/",
-};
-
-// Telemetry events
-// tslint:disable-next-line:variable-name
-export const TelemetryEvent = {
-    UserActivity: "UserActivity",
-    BotActivity: "BotActivity",
-};
+export const logger = winston.createLogger({
+    format: winston.format.combine(
+        winston.format.colorize(),
+    ),
+    transports: [
+        new winston.transports.Console(),
+    ],
+});

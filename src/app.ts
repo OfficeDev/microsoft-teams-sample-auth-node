@@ -29,15 +29,15 @@ let favicon = require("serve-favicon");
 let http = require("http");
 let path = require("path");
 import * as config from "config";
-import * as builder from "botbuilder";
 import * as msteams from "botbuilder-teams";
-import * as winston from "winston";
-import * as storage from "./storage";
+import * as apis from "./apis";
 import * as providers from "./providers";
+import * as storage from "./storage";
 import { AuthBot } from "./AuthBot";
-import { ValidateAADToken } from "./apis/ValidateAADToken";
+import { logger } from "./utils/index";
 
 let app = express();
+let appId = config.get("app.appId");
 
 app.set("port", process.env.PORT || 3978);
 app.use(express.static(path.join(__dirname, "../../public")));
@@ -47,7 +47,7 @@ app.use(bodyParser.json());
 let handlebars = exphbs.create({
     extname: ".hbs",
     helpers: {
-        appId: () => { return config.get("app.appId"); },
+        appId: () => { return appId; },
     },
 });
 app.engine("hbs", handlebars.engine);
@@ -61,7 +61,7 @@ switch (botStorageProvider) {
         botStorage = new storage.MongoDbBotStorage(config.get("mongoDb.botStateCollection"), config.get("mongoDb.connectionString"));
         break;
     case "memory":
-        botStorage = new builder.MemoryBotStorage();
+        botStorage = new storage.MemoryBotStorage();
         break;
     case "null":
         botStorage = new storage.NullBotStorage();
@@ -83,7 +83,7 @@ let bot = new AuthBot(connector, botSettings, app);
 
 // Log bot errors
 bot.on("error", (error: Error) => {
-    winston.error(error.message, error);
+    logger.error(error.message, error);
 });
 
 // Configure bot routes
@@ -102,7 +102,15 @@ app.get("/tab/simple-end", (req, res) => { res.render("tab/simple/simple-end"); 
 app.get("/tab/silent", (req, res) => { res.render("tab/silent/silent"); });
 app.get("/tab/silent-start", (req, res) => { res.render("tab/silent/silent-start"); });
 app.get("/tab/silent-end", (req, res) => { res.render("tab/silent/silent-end"); });
-app.get("/api/validateToken", ValidateAADToken.listen());
+
+let openIdMetadata = new apis.OpenIdMetadata("https://login.microsoftonline.com/common/.well-known/openid-configuration");
+let validateIdToken = new apis.ValidateIdToken(openIdMetadata, appId).listen();     // Middleware to validate id_token
+app.get("/api/decodeToken", validateIdToken, new apis.DecodeIdToken().listen());
+app.get("/api/getProfileFromGraph", validateIdToken, new apis.GetProfileFromGraph(config.get("app.appId"), config.get("app.appPassword")).listen());
+app.get("/api/getProfilesFromBot", validateIdToken, async (req, res) => {
+    let profiles = await bot.getUserProfilesAsync(res.locals.token["oid"]);
+    res.status(200).send(profiles);
+});
 
 // Configure ping route
 app.get("/ping", (req, res) => {
@@ -115,18 +123,19 @@ app.get("/ping", (req, res) => {
 // will print stacktrace
 if (app.get("env") === "development") {
     app.use(function(err: any, req: Request, res: Response, next: Function): void {
-        winston.error("Failed request", err);
-        res.status(err.status || 500).send(err);
+        logger.error("Failed request", err);
+        res.status(err.status || 500, err).send(err);
     });
 }
 
 // production error handler
 // no stacktraces leaked to user
 app.use(function(err: any, req: Request, res: Response, next: Function): void {
-    winston.error("Failed request", err);
+    logger.error("Failed request", err);
     res.sendStatus(err.status || 500);
 });
 
 http.createServer(app).listen(app.get("port"), function (): void {
-    winston.verbose("Express server listening on port " + app.get("port"));
+    logger.verbose("Express server listening on port " + app.get("port"));
+    logger.verbose("Bot messaging endpoint: " + config.get("app.baseUri") + "/api/messages");
 });

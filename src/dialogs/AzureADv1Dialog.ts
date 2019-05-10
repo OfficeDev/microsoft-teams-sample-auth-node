@@ -31,7 +31,7 @@ import { BaseIdentityDialog } from "./BaseIdentityDialog";
 export class AzureADv1Dialog extends BaseIdentityDialog
 {
     constructor() {
-        super(constants.IdentityProviders.azureADv1, constants.DialogId.AzureADv1);
+        super(constants.IdentityProvider.azureADv1, constants.DialogId.AzureADv1);
     }
 
     // Get an authorization url for Azure AD

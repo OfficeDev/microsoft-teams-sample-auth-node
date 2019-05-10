@@ -51,4 +51,6 @@ export interface IOAuth2Provider {
     // Redeem the authorization code for an access token
     getAccessTokenAsync(code: string): Promise<UserToken>;
 
+    // Get the user's profile
+    getProfileAsync(accessToken: string): Promise<any>;
 }
