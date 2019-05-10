@@ -58,11 +58,8 @@
         <button id="btnLogout" onclick="logout()" style="display: none">Logout (Silent)</button>
 
         <script src="https://code.jquery.com/jquery-3.1.1.js" integrity="sha384-VC7EHu0lDzZyFfmjTPJq+DFyIn8TUGAJbEtpXquazFVr00Q/OOx//RjiZ9yU9+9m" crossorigin="anonymous"></script>
-        <script src="https://statics.teams.microsoft.com/sdk/v1.2/js/MicrosoftTeams.min.js" integrity="sha384-OncOcMprEYFkUvhe15zi8VdCZIOcuNGnf4ilq2yTfDEjTwPF19V7pZrzxOq/iqt0" crossorigin="anonymous"></script>
-
-        <!-- Check before upgrading your ADAL version, as this sample depends on an internal function to authenticate silently -->
-        <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.15/js/adal.min.js" integrity="sha384-lIk8T3uMxKqXQVVfFbiw0K/Nq+kt1P3NtGt/pNexiDby2rKU6xnDY8p16gIwKqgI" crossorigin="anonymous"></script>
-        
+        <script src="https://unpkg.com/@microsoft/teams-js@1.3.0-beta.2/dist/MicrosoftTeams.min.js" integrity="sha384-UrBZN2SXY+5Qk4UILoMd/MLHFmuorkvZSMiRtl9XB/EoGHIBFsGfb9o2MU3JDEyV" crossorigin="anonymous"></script>
+        <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.17/js/adal.min.js" integrity="sha384-BIOS/65fbAsb2XiCCSTlZSTTl0ZgqkOU522dpyk5meOnN2EOQ3uH+QpqEtoAtmBn" crossorigin="anonymous"></script>
         <script type="text/javascript">
             microsoftTeams.initialize();
     
@@ -82,6 +79,11 @@
                 redirectUri: window.location.origin + "/tab/silent-end",     // This should be in the list of redirect uris for the AAD app
                 cacheLocation: "localStorage",
                 navigateToLoginRequestUrl: false,
+
+                // Setup extra query parameters for ADAL
+                // - openid and profile scope adds profile information to the id_token
+                // - login_hint provides the expected user name
+                extraQueryParameter: "scope=openid+profile&login_hint=" + encodeURIComponent(loginHint),
             };
 
             // Setup extra query parameters for ADAL
@@ -102,40 +104,35 @@
                 authContext.clearCache();
             }
     
-            // Get the id token (which is the access token for resource = clientId)
-            let token = authContext.getCachedToken(config.clientId);
-            if (token) {
-                showUserInformation(token);
-            } else {
-                // No token, or token is expired
-                // First, verify that we are renewing the right user's token
-                if ((user) && (user.profile.oid === userObjectId)) {
-                    authContext._renewIdToken(function (err, idToken) {
-                        if (err) {
-                            console.log("Renewal failed: " + err);
+            // Get the id token (which is the token for resource = clientId)
+            authContext.acquireToken(config.clientId, function (errDesc, token, err, tokenType) {
+                if (token) {
+                    // When there's no cached user, ADAL.js 1.0.17 returns an access token in the callback even when asked for the id token.
+                    // To work around this bug, check the token type; if it's not an id token, get the id token from cache.
+                    if (tokenType !== authContext.CONSTANTS.ID_TOKEN) {
+                        console.log("ADAL.js bug: requested id_token, got " + tokenType);
+                        token = authContext.getCachedToken(config.clientId);
+                    }
 
-                            // Failed to get the token silently; show the login button
-                            $("#btnLogin").css({ display: "" });
-
-                            // You could attempt to launch the login popup here, but in browsers this could be blocked by
-                            // a popup blocker, in which case the login attempt will fail with the reason FailedToOpenWindow.
-                        } else {
-                            showUserInformation(idToken);
-                        }
-                    });
+                    showUserInformation(token);
                 } else {
-                    // Make the user log in again
+                    console.log("Failed to get id token silently: " + errDesc);
+
+                    // Failed to get the id token silently; show the login button
                     $("#btnLogin").css({ display: "" });
+
+                    // You could attempt to launch the login popup here, but in browsers this could be blocked by
+                    // a popup blocker, in which case the login attempt will fail with the reason FailedToOpenWindow.
                 }
-            }
+            });
 
             // To get an access token to a resource like Graph,
-            //   1. Provide the resource id to getCachedToken 
-            //          authContext.getCachedToken("https://graph.microsoft.com")
-            //   2. Call _renewToken instead of _renewIdToken
-            //          authContext._renewToken("https://graph.microsoft.com", function(err, accessToken) { ... })
+            // 1. Provide the resource id to acquireToken() 
+            //        authContext.acquireToken("https://graph.microsoft.com", function (errDesc, token, err, tokenType) { ... })
+            // 2. Remove the check for tokenType from the callback, because access token is the correct type. 
+            // 3. In the success callback below, call acquireToken again. 
     
-            // Login to Azure AD
+            // Interactive login to Azure AD
             function login() {
                 $(".auth-data").css({ display: "none" });
 
