@@ -133,8 +133,8 @@ export abstract class BaseIdentityDialog extends builder.IntentDialog
     // Handle user login callback
     private async handleLoginCallback(session: builder.Session): Promise<void> {
         let messageAsAny = session.message as any;
-        let verificationCode = messageAsAny.originalInvoke.value.state;
 
+        let verificationCode = messageAsAny.originalInvoke.value.state;
         utils.validateVerificationCode(session, this.providerName, verificationCode);
 
         // End of auth flow: if the token is marked as validated, then the user is logged in

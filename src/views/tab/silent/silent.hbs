@@ -32,23 +32,27 @@
             This sample demonstrates silent authentication in a Microsoft Teams tab.
         </p>
         <p>
-            The tab will try to get an id token for the user silently, validate the token and show the profile information decoded from the token.
+            The tab will try to get an id token for the user silently and information about the user.
             The "Login" button will appear only if silent authentication failed.
         </p>
 
         <!-- Login button -->
         <button id="btnLogin" onclick="login()" style="display: none">Login to Azure AD</button>
 
+        <p id="divError" style="display: none" class="auth-data"></p>
+
         <!-- Result -->
-        <p>
-            <div id="divError" style="display: none"></div>
-            <div id="divProfile" style="display: none">
-                <div><b>Name:</b> <span id="profileDisplayName"/></div>
-                <div><b>Object id:</b> <span id="profileObjectId"/></div>
-                <div><b>UPN:</b> <span id="profileUpn"/></div>
-                <div><b>Unique name:</b> <span id="profileUniqueName"/></div>
-            </div>
-        </p>
+        <h2>Claims from id_token</h2>
+        <div id="divIdTokenError" style="display: none" class="auth-data"></div>
+        <div id="divIdTokenClaims" style="display: none" class="auth-data"></div>
+
+        <h2>Profile from Microsoft Graph (via On-Behalf-Of flow)</h2>
+        <div id="divGraphProfileError" style="display: none" class="auth-data"></div>
+        <div id="divGraphProfile" style="display: none" class="auth-data"></div>
+
+        <h2>Profile from account(s) linked through the bot</h2>
+        <div id="divBotProfilesError" style="display: none" class="auth-data"></div>
+        <div id="divBotProfiles" style="display: none" class="auth-data"></div>
 
         <!-- Logout button -->
         <button id="btnLogout" onclick="logout()" style="display: none">Logout (Silent)</button>
@@ -93,11 +97,9 @@
     
             // See if there's a cached user and it matches the expected user
             let user = authContext.getCachedUser();
-            if (user) {
-                if (user.profile.oid !== userObjectId) {
-                    // User doesn't match, clear the cache
-                    authContext.clearCache();
-                }
+            if (user && (user.profile.oid !== userObjectId)) {
+                // User doesn't match, clear the cache
+                authContext.clearCache();
             }
     
             // Get the id token (which is the access token for resource = clientId)
@@ -135,8 +137,7 @@
     
             // Login to Azure AD
             function login() {
-                $("#divError").text("").css({ display: "none" });
-                $("#divProfile").css({ display: "none" });
+                $(".auth-data").css({ display: "none" });
 
                 microsoftTeams.authentication.authenticate({
                     url: window.location.origin + "/tab/silent-start",
@@ -162,34 +163,115 @@
                         // At this point we have to get the user involved, so show the login button
                         $("#btnLogin").css({ display: "" });
 
+                        $(".auth-data").css({ display: "none" });
                         $("#divError").text(reason).css({ display: "" });
-                        $("#divProfile").css({ display: "none" });
                     }
                 });
             }
-    
-            // Validate the provided id_token, and show the user information from claims in the id_token.
-            // This demonstrates how you might expose an API that takes the id_token as a user identity claim.
+
+            // Show information about the logged-in user    
             function showUserInformation(idToken) {
-                // The /api/validateToken endpoint takes an id_token in the Authorization header and attempts
-                // to validate it as per (https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-token-and-claims#idtokens).
+                // This demonstrates what an application can do with the id_token
+
+                // A) The app can use it as proof of the user's identity.
+                // The /api/decodeToken endpoint takes an id_token in the Authorization header and validates it
+                // as per (https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-token-and-claims#idtokens).
                 // If successful, it returns the decoded token. Otherwise it return an HTTP 401 Unauthorized response.
                 $.ajax({
-                    url: window.location.origin + "/api/validateToken",
+                    url: window.location.origin + "/api/decodeToken",
                     beforeSend: function(request) {
                         request.setRequestHeader("Authorization", "Bearer " + idToken);
                     },
                     success: function (token) {
-                        $("#profileDisplayName").text(token.name);
-                        $("#profileObjectId").text(token.oid);
-                        $("#profileUpn").text(token.upn);
+                        let claimsDiv = $("#divIdTokenClaims");
+                        claimsDiv.empty();
+
+                        for (let claimId in token) {
+                            $("<div>")
+                                .append($("<b>").text(claimId + ": "))
+                                .append($("<span>").text(token[claimId]))
+                                .appendTo(claimsDiv);
+                        }
 
                         // The id token for a guest (external) user will not have a "upn" claim.
                         // Instead it has a "unique_name" claim, which is the username in the home organization/identity provider.
-                        $("#profileUniqueName").text(token.unique_name);
 
-                        $("#divProfile").css({ display: "" });
-                        $("#divError").css({ display: "none" });
+                        $("#divIdTokenClaims").css({ display: "" });
+                        $("#divIdTokenError").css({ display: "none" });
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
+                        $("#divIdTokenError").text(errorThrown).css({ display: "" });
+                        $("#divIdTokenClaims").css({ display: "none" });
+                    },
+                });
+
+                // B) Through the Azure AD On-Behalf-Of flow, the app can exchange it for an access token for 
+                // other APIs that the user has consented to. In this example, the app gets a Graph token and
+                // returns the user's full Azure AD profile. 
+                $.ajax({
+                    url: window.location.origin + "/api/getProfileFromGraph",
+                    beforeSend: function(request) {
+                        request.setRequestHeader("Authorization", "Bearer " + idToken);
+                    },
+                    success: function (profile) {
+                        let profileDiv = $("#divGraphProfile");
+                        profileDiv.empty();
+
+                        for (let key in profile) {
+                            if ((key[0] !== "@") && profile[key]) {
+                                $("<div>")
+                                    .append($("<b>").text(key + ": "))
+                                    .append($("<span>").text(profile[key]))
+                                    .appendTo(profileDiv);
+                            }
+                        }
+
+                        $("#divGraphProfile").css({ display: "" });
+                        $("#divGraphProfileError").css({ display: "none" });
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
+                        $("#divGraphProfileError").text(errorThrown).css({ display: "" });
+                        $("#divGraphProfile").css({ display: "none" });
+                    },
+                });
+
+                // C) The id_token serves as verifiable evidence of the user's identity, in particular, it has
+                // a claim of the user's Azure AD object id ("oid"). With the OID as a key, the app can share
+                // data betwen it's various capabilities (tab, bot, messaging extension). Here, the tab uses the
+                // /api/getProfilesFromBot endpoint to show  profiles from the various services that the user has
+                // signed in to via the bot.
+                $.ajax({
+                    url: window.location.origin + "/api/getProfilesFromBot",
+                    beforeSend: function(request) {
+                        request.setRequestHeader("Authorization", "Bearer " + idToken);
+                    },
+                    success: function (profiles) {
+                        let profilesDiv = $("#divBotProfiles");
+                        profilesDiv.empty();
+
+                        if (Object.keys(profiles).length === 0) {
+                            profilesDiv.text("No accounts linked");
+                        } else {
+                            for (let profileName in profiles) {
+                                profilesDiv.append($("<h3>").text(profileName));
+
+                                let profile = profiles[profileName];
+                                for (let key in profile) {
+                                    let value = profile[key];
+                                    if ((key[0] !== "@") && value) {
+                                        $("<div>")
+                                            .append($("<b>").text(key + ": "))
+                                            .append($("<span>").text((value instanceof Object) ?  JSON.stringify(value) : value))
+                                            .appendTo(profilesDiv);
+                                    }
+                                }
+                            }
+                        }
+
+                        $("#divBotProfiles").css({ display: "" });
+                        $("#divBotProfilesError").css({ display: "none" });
                         
                         // Show the logout button and hide the login button
                         $("#btnLogin").css({ display: "none" });
@@ -197,8 +279,8 @@
                     },
                     error: function (xhr, textStatus, errorThrown) {
                         console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
-                        $("#divError").text(errorThrown).css({ display: "" });
-                        $("#divProfile").css({ display: "none" });
+                        $("#divBotProfilesError").text(errorThrown).css({ display: "" });
+                        $("#divBotProfiles").css({ display: "none" });
                     },
                 });
             }

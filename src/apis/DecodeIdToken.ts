@@ -21,30 +21,15 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-// Activity types
-export const messageType = "message";
-export const invokeType = "invoke";
+import * as express from "express";
 
-// Identity providers
-// tslint:disable-next-line:variable-name
-export const IdentityProvider = {
-    linkedIn: "linkedIn",
-    azureADv1: "azureADv1",
-    google: "google",
-};
+// Decode the id_token from AAD in the Authorization header
+export class DecodeIdToken {
 
-// Dialog ids
-// tslint:disable-next-line:variable-name
-export const DialogId = {
-    LinkedIn: "LinkedIn",
-    AzureADv1: "AzureADv1",
-    Google: "Google",
-    Root: "/",
-};
+    public listen(): express.RequestHandler {
+        return (req: express.Request, res: express.Response) => {
+            res.status(200).send(res.locals.token);
+        };
+    }
 
-// Telemetry events
-// tslint:disable-next-line:variable-name
-export const TelemetryEvent = {
-    UserActivity: "UserActivity",
-    BotActivity: "BotActivity",
-};
+}

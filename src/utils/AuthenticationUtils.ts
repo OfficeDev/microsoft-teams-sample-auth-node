@@ -61,6 +61,12 @@ export function getUserToken(session: builder.Session, providerName: string): Us
     return (token && token.verificationCodeValidated) ? token : null;
 }
 
+// Gets the validated user token for the given provider
+export function getUserTokenFromUserData(userData: any, providerName: string): UserToken {
+    let token = getUserTokenFromUserDataUnsafe(userData, providerName);
+    return (token && token.verificationCodeValidated) ? token : null;
+}
+
 // Checks if the user has a token that is pending verification
 export function isUserTokenPendingVerification(session: builder.Session, providerName: string): boolean {
     let token = getUserTokenUnsafe(session, providerName);
@@ -121,4 +127,10 @@ async function generateVerificationCode(): Promise<string> {
 function getUserTokenUnsafe(session: builder.Session, providerName: string): UserToken {
     ensureProviderData(session, providerName);
     return (session.userData[providerName].userToken);
+}
+
+// Gets the user token for the given provider, even if it has not yet been validated
+function getUserTokenFromUserDataUnsafe(userData: any, providerName: string): UserToken {
+    let providerData = userData[providerName];
+    return (providerData && providerData.userToken);
 }
