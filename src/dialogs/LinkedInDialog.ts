@@ -30,7 +30,7 @@ import { BaseIdentityDialog } from "./BaseIdentityDialog";
 export class LinkedInDialog extends BaseIdentityDialog
 {
     constructor() {
-        super(constants.IdentityProviders.linkedIn, constants.DialogId.LinkedIn);
+        super(constants.IdentityProvider.linkedIn, constants.DialogId.LinkedIn);
     }
 
     // Show user profile

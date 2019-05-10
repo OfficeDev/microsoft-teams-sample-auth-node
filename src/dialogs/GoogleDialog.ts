@@ -30,7 +30,7 @@ import { BaseIdentityDialog } from "./BaseIdentityDialog";
 export class GoogleDialog extends BaseIdentityDialog
 {
     constructor() {
-        super(constants.IdentityProviders.google, constants.DialogId.Google);
+        super(constants.IdentityProvider.google, constants.DialogId.Google);
     }
 
     // Show user profile

@@ -1,5 +1,18 @@
+---
+topic: sample
+products:
+- Microsoft Teams
+- Office 365
+languages:
+- TypeScript
+extensions:
+  contentType: samples
+  createdDate: 2/8/2018 5:06:47 PM
+---
 # Microsoft Teams Authentication Sample
-This sample demonstrates authentication in Microsoft Teams apps. 
+This sample demonstrates authentication in Microsoft Teams apps.
+
+There is a version of this app running on Microsoft Azure that you can try yourself. Download the [AuthBot.zip](https://github.com/OfficeDev/microsoft-teams-sample-auth-node/raw/master/manifest/AuthBot.zip) app package and then [upload it into Microsoft Teams](https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload). Then start a chat with `@authbot`.
 
 ## Getting started
 Start by following the setup instructions in the [Microsoft Teams Sample (Node.JS)](https://github.com/OfficeDev/microsoft-teams-sample-complete-node), under [Steps to see the full app in Microsoft Teams](https://github.com/OfficeDev/microsoft-teams-sample-complete-node#steps-to-see-the-full-app-in-microsoft-teams), applying it to the code in this sample. The instructions in that project walk you through the following steps:
@@ -19,7 +32,7 @@ This project uses the [config](https://www.npmjs.com/package/config) package. Th
 
 The instructions below assume that you're using environment variables to configure the app, and will specify the name of the variable to set.
 
-### Using AzureAD
+### Using Azure AD
 Registering a bot with the Microsoft Bot Framework automatically creates a corresponding Azure AD application with the same name and ID. 
 1. Go to the [Application Registration Portal](https://apps.dev.microsoft.com) and sign in with the same account that you used to register your bot.
 2. Find your application in the list and click on the name to edit.
@@ -71,7 +84,6 @@ Registering a bot with the Microsoft Bot Framework automatically creates a corre
 * The Teams app sends the `signin/verifyState` invoke message in a way that's equivalent to the user typing a message to your bot. This means that although the user information in the message is not falsifiable, a malicious user **can** tamper with the payload, or send additional invoke messages that were not initiated by your app.
 * Store your users’ access tokens in such a way that they are encrypted at rest, especially if you are also storing refresh tokens. Consider, based on your use case and threat model, how often to rotate the encryption key. (The sample uses an in-memory store for simplicity; do not do this in your production app!)
 * If you are using OAuth, remember that the `state` parameter in the authentication request must contain a unique session token to prevent request forgery attacks. The sample uses a randomly-generated GUID.
-
 
 ### Mobile clients
 

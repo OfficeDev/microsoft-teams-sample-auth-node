@@ -31,6 +31,7 @@ export class OpenIdMetadata {
     // tslint:disable-next-line:typedef
     private lastUpdated = 0;
     private keys: IKey[];
+    private issuer: string;
 
     constructor(url: string) {
         this.url = url;
@@ -58,6 +59,15 @@ export class OpenIdMetadata {
         }
     }
 
+    // Get the expected issuer template.
+    // The string will contain a "{tenantid}" placeholder for the tenant id.
+    public getIssuer(tenantId: string): string {
+        if (!this.issuer) {
+            throw new Error("Configuration has not yet been fetched. Call getKey() first to ensure that the configuration is up to date.");
+        }
+        return this.issuer.replace("{tenantid}", tenantId);
+    }
+
     private refreshCache(cb: (err: Error) => void): void {
         let options: request.Options = {
             method: "GET",
@@ -74,6 +84,7 @@ export class OpenIdMetadata {
                 cb(err);
             } else {
                 let openIdConfig = body as IOpenIdConfig;
+                this.issuer = openIdConfig.issuer;
 
                 // tslint:disable-next-line:no-shadowed-variable
                 let options: request.Options = {

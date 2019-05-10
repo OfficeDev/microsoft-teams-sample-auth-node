@@ -23,6 +23,7 @@
 
 import * as builder from "botbuilder";
 import * as constants from "../constants";
+import * as storage from "../storage";
 import { LinkedInDialog } from "./LinkedInDialog";
 import { AzureADv1Dialog } from "./AzureADv1Dialog";
 import { GoogleDialog } from "./GoogleDialog";
@@ -30,6 +31,8 @@ import { GoogleDialog } from "./GoogleDialog";
 // Root dialog provides choices in identity providers
 export class RootDialog extends builder.IntentDialog
 {
+    private botStorage: storage.IBotExtendedStorage;
+
     constructor() {
         super();
     }
@@ -37,6 +40,8 @@ export class RootDialog extends builder.IntentDialog
     // Register the dialog with the bot
     public register(bot: builder.UniversalBot): void {
         bot.dialog(constants.DialogId.Root, this);
+
+        this.botStorage = bot.get("storage") as storage.IBotExtendedStorage;
 
         this.onBegin((session, args, next) => { this.onDialogBegin(session, args, next); });
         this.onDefault((session) => { this.onMessageReceived(session); });
@@ -56,6 +61,10 @@ export class RootDialog extends builder.IntentDialog
 
     // Handle start of dialog
     private async onDialogBegin(session: builder.Session, args: any, next: () => void): Promise<void> {
+        // Stamp the user data bag with the user's AAD object ID, so we can look it up later
+        let aadObjectId = (session.message.address.user as any).aadObjectId;
+        this.botStorage.setAAdObjectId(session.userData, aadObjectId);
+
         session.dialogData.isFirstTurn = true;
         this.promptForIdentityProvider(session);
         next();

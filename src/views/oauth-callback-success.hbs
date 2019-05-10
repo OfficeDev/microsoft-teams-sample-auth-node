@@ -45,7 +45,7 @@
             // If the window is still visible after 5 seconds, then we are probably on a platform
             // that does not support automatically passing the verification code using notifySuccess().
             // So we ask the user to manually enter the verification code in the chat window.
-            setTimeout(() => {
+            setTimeout(function () {
                 document.getElementById("instructionText").style.display = "initial";
             }, 5000);
 
