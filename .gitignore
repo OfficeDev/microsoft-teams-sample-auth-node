@@ -62,3 +62,8 @@ typings/
 # Generated files
 build/
 _package/
+
+# Debug files
+manifest/authbot-debug/**
+manifest/authbot-debug.zip
+manifest/manifest_AuthBot.json

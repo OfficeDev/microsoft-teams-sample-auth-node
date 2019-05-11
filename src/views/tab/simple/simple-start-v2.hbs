@@ -21,7 +21,7 @@
         <title>Simple Authentication Sample Login</title>
     </head>
     <body>
-        <script src="https://statics.teams.microsoft.com/sdk/v1.2/js/MicrosoftTeams.min.js" integrity="sha384-OncOcMprEYFkUvhe15zi8VdCZIOcuNGnf4ilq2yTfDEjTwPF19V7pZrzxOq/iqt0" crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/@microsoft/teams-js@1.4.2/dist/MicrosoftTeams.min.js" integrity="sha384-DcoNUuQTjpW5Sw3msonn/2ojgtNvtC5fCGd5U9RUpL3g1hla1LzHz8I9YIYSXe6q" crossorigin="anonymous"></script>
 
         <script type="text/javascript">
             microsoftTeams.initialize();
@@ -48,7 +48,7 @@
 
                 // Go to the AzureAD authorization endpoint (tenant-specific endpoint, not "common")
                 // For guest users, we want an access token for the tenant we are currently in, not the home tenant of the guest. 
-                let authorizeEndpoint = "https://login.microsoftonline.com/" + context.tid + "/oauth2/v2.0/authorize?" + toQueryString(queryParams);
+                let authorizeEndpoint = `https://login.microsoftonline.com/${context.tid}/oauth2/v2.0/authorize?${toQueryString(queryParams)}`;
                 window.location.assign(authorizeEndpoint);
             });
 

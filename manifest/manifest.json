@@ -2,7 +2,7 @@
   "$schema": "https://statics.teams.microsoft.com/sdk/v1.2/manifest/MicrosoftTeams.schema.json",
   "manifestVersion": "1.2",
   "version": "1.0",
-  "id": "<<REGISTERED_BOT_ID>>",
+  "id": "00000000-0000-0000-0000-000000000000",
   "packageName": "com.microsoft.teams.samples.auth",
   "developer": {
     "name": "Your Name Here",
@@ -23,6 +23,7 @@
   },
   "accentColor": "#F3F4F6",
   "configurableTabs": [
+    
   ],
   "staticTabs": [
     {

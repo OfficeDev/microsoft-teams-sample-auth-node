@@ -1,14 +1,3 @@
----
-topic: sample
-products:
-- Microsoft Teams
-- Office 365
-languages:
-- TypeScript
-extensions:
-  contentType: samples
-  createdDate: 2/8/2018 5:06:47 PM
----
 # Microsoft Teams Authentication Sample
 This sample demonstrates authentication in Microsoft Teams apps.
 
@@ -78,22 +67,13 @@ Registering a bot with the Microsoft Bot Framework automatically creates a corre
 
 
 ### Security notes
+
 * The verification code mechanism prevents a potential ["man in the middle" attack](https://hueniverse.com/explaining-the-oauth-session-fixation-attack-aa759250a0e7) by requiring evidence that the user who authorized the bot in the browser is the same person as the user who is chatting with the bot. **Don't** remove the need for a verification code without understanding what it is protecting against, and weighing the risk against your use case and threat model.
 * Don't use the `signin/verifyState` message to pass sensitive data (e.g., access tokens) directly to your bot in plaintext. The `state` value should not be usable without additional information that's available only to your bot.
 * The Teams app sends the `signin/verifyState` invoke message in a way that's equivalent to the user typing a message to your bot. This means that although the user information in the message is not falsifiable, a malicious user **can** tamper with the payload, or send additional invoke messages that were not initiated by your app.
 * Store your users’ access tokens in such a way that they are encrypted at rest, especially if you are also storing refresh tokens. Consider, based on your use case and threat model, how often to rotate the encryption key. (The sample uses an in-memory store for simplicity; do not do this in your production app!)
 * If you are using OAuth, remember that the `state` parameter in the authentication request must contain a unique session token to prevent request forgery attacks. The sample uses a randomly-generated GUID.
 
-
 ### Mobile clients
-As of February 2018, the Microsoft Teams mobile clients do not fully support the `signin` action protocol:
-* If the URL provided to the `signin` action has a `fallbackUrl` query string parameter, Teams will launch that URL in the browser.
-* Otherwise, Teams will show an error saying that the action is not yet supported on mobile.
 
-In the example, the mobile signin flow works the same way as on desktop, until the point where the OAuth callback page tries to send the verification code back to the bot. The bot sets the `fallbackUrl` query string parameter to be the same as the original url to the auth start page, so that the user goes to the same page on all platforms. ([View code](https://github.com/OfficeDev/microsoft-teams-sample-auth-node/blob/469952a26d618dbf884a3be53c7d921cc580b1e2/src/dialogs/BaseIdentityDialog.ts#L173-L178))
-
-When the OAuth callback runs in a mobile browser, the call to `notifySuccess()` will fail silently because it's not running inside the Teams client. The window will not close and the bot won't get the verification code. To handle this case, the page has a timer that checks if it's still open after 5 seconds. If so, it asks the user to manually send the verification code via chat. The bot code is able to receive the verification code from either the `signin/verifyState` callback or a chat message. ([View code](https://github.com/OfficeDev/microsoft-teams-sample-auth-node/blob/469952a26d618dbf884a3be53c7d921cc580b1e2/src/dialogs/BaseIdentityDialog.ts#L106-L117))
-
-To limit signing in to web and desktop clients only, you can either omit the `fallbackUrl` parameter, or point it to an error page that asks the user to sign in with Teams on web or desktop.
-
-When the Teams mobile clients support the complete signin protocol, including passing the verification code via `notifySuccess()`, they will launch the auth start page in a popup window and ignore `fallbackUrl`.
+As of April 2019, Microsoft Teams mobile clients support the `signin` action protocol (that is, mobile clients work the same way as the desktop/web clients). It does require an updated version of the [Microsoft Teams JavaScript library](https://www.npmjs.com/package/@microsoft/teams-js) (1.4.1 or later). The way it used to work is described [here](fallbackUrl.md).
