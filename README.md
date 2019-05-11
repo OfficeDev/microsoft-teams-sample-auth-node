@@ -1,14 +1,3 @@
----
-topic: sample
-products:
-- Microsoft Teams
-- Office 365
-languages:
-- TypeScript
-extensions:
-  contentType: samples
-  createdDate: 2/8/2018 5:06:47 PM
----
 # Microsoft Teams Authentication Sample
 This sample demonstrates authentication in Microsoft Teams apps.
 
