@@ -49,6 +49,7 @@ let handlebars = exphbs.create({
     helpers: {
         appId: () => { return appId; },
     },
+    defaultLayout: false,
 });
 app.engine("hbs", handlebars.engine);
 app.set("view engine", "hbs");
@@ -124,7 +125,7 @@ app.get("/ping", (req, res) => {
 if (app.get("env") === "development") {
     app.use(function(err: any, req: Request, res: Response, next: Function): void {
         logger.error("Failed request", err);
-        res.status(err.status || 500, err).send(err);
+        res.status(err.status || 500).send(err);
     });
 }
 
