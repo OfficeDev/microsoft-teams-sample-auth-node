@@ -1,15 +1,22 @@
 ---
 page_type: sample
 products:
+- office
 - office-teams
 - office-365
 languages:
 - typescript
+- javascript
+- html
+description: "This sample demonstrates authentication in Microsoft Teams apps."
+urlFragment: microsoft-teams-auth
 extensions:
   contentType: samples
-  createdDate: 2/8/2018 5:06:47 PM
+  createdDate: "2/8/2018 5:06:47 PM"
 ---
+
 # Microsoft Teams Authentication Sample
+
 This sample demonstrates authentication in Microsoft Teams apps.
 
 There is a version of this app running on Microsoft Azure that you can try yourself. Download the [AuthBot.zip](https://github.com/OfficeDev/microsoft-teams-sample-auth-node/raw/master/manifest/AuthBot.zip) app package and then [upload it into Microsoft Teams](https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload). Then start a chat with `@authbot`.
