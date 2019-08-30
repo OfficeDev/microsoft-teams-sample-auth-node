@@ -41,11 +41,19 @@
       "scopes": [
         "personal"
       ]
+    },
+    {
+      "contentUrl": "https://<<BASE_URI_DOMAIN>>/tab/silent-msal?loginHint={loginHint}&userObjectId={userObjectId}&tenantId={tid}",
+      "entityId": "silentAuthMsal",
+      "name": "Silent Auth (MSAL)",
+      "scopes": [
+        "personal"
+      ]
     }
   ],
   "bots": [
     {
-      "botId": "<<REGISTERED_BOT_ID>>",
+      "botId": "2a03dd7a-d6c9-46b7-9e81-6fa2f9a19a19",
       "scopes": [
         "personal"
       ]
@@ -56,6 +64,6 @@
     "identity"
   ],
   "validDomains": [
-    "<<BASE_URI_DOMAIN>>"
+    "9a246c26.ngrok.io"
   ]
 }
