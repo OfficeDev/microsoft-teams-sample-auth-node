@@ -103,6 +103,7 @@ app.get("/tab/simple-end", (req, res) => { res.render("tab/simple/simple-end"); 
 app.get("/tab/silent", (req, res) => { res.render("tab/silent/silent"); });
 app.get("/tab/silent-start", (req, res) => { res.render("tab/silent/silent-start"); });
 app.get("/tab/silent-end", (req, res) => { res.render("tab/silent/silent-end"); });
+app.get("/tab/sso", (req, res) => { res.render("tab/sso/sso"); });
 
 let openIdMetadata = new apis.OpenIdMetadata("https://login.microsoftonline.com/common/.well-known/openid-configuration");
 let validateIdToken = new apis.ValidateIdToken(openIdMetadata, appId).listen();     // Middleware to validate id_token

@@ -40,24 +40,65 @@ This project uses the [config](https://www.npmjs.com/package/config) package. Th
 The instructions below assume that you're using environment variables to configure the app, and will specify the name of the variable to set.
 
 ### Using Azure AD
-Registering a bot with the Microsoft Bot Framework automatically creates a corresponding Azure AD application with the same name and ID. 
+Registering a bot with the Microsoft Bot Framework automatically creates a corresponding Azure AD application with the same name and ID.
 1. Go to the [Application Registration Portal](https://apps.dev.microsoft.com) and sign in with the same account that you used to register your bot.
 2. Find your application in the list and click on the name to edit.
-3. Click on "Add platform", choose "Web", then add the following redirect URLs:
+3. Navigate to **Authentication** under **Manage** and add the following redirect URLs:
      * `https://<your_ngrok_url>/auth/azureADv1/callback`
      * `https://<your_ngrok_url>/tab/simple-end`
      * `https://<your_ngrok_url>/tab/silent-end`
-4. Scroll to the bottom of the page and click on "Save".
-5. The bot uses `MICROSOFT_APP_ID` and `MICROSOFT_APP_PASSWORD`, so these should already be set. No further changes needed!
 
-### Using LinkedIn 
+     Additionally, under the **Implicit grant** subsection select **Access tokens** and **ID tokens**
+
+4. Clcik on **Expose an API** under **Manage**. Select the Set link to generate the Application ID URI in the form of api://{AppID}. Insert your fully qualified domain name (with a forward slash "/" appended to the end) between the double forward slashes and the GUID. The entire ID should have the form of: api://<your_ngrok_url>/{AppID}
+5. Select the **Add a scope** button. In the panel that opens, enter `access_as_user` as the **Scope name**.
+6. Set Who can consent? to Admins and users
+7. Fill in the fields for configuring the admin and user consent prompts with values that are appropriate for the `access_as_user` scope. Suggestions:
+    * **Admin consent title:** Teams can access the user’s profile
+    * **Admin consent description**: Allows Teams to call the app’s web APIs as the current user.
+    * **User consent title**: Teams can access your user profile and make requests on your behalf
+    * **User consent description:** Enable Teams to call this app’s APIs with the same rights that you have
+8. Ensure that **State** is set to **Enabled**
+9. Select **Add scope**
+    * Note: The domain part of the **Scope name** displayed just below the text field should automatically match the **Application ID** URI set in the previous step, with `/access_as_user` appended to the end; for example:
+        * `api://<your_ngrok_url>/c6c1f32b-5e55-4997-881a-753cc1d563b7/access_as_user`
+10. In the **Authorized client applications** section, you identify the applications that you want to authorize to your app’s web application. Each of the following IDs needs to be entered:
+    * `1fec8e78-bce4-4aaf-ab1b-5451cc387264` (Teams mobile/desktop application)
+    * `5e3ce6c0-2b1f-4285-8d4b-75ee78787346` (Teams web application)
+11. Navigate to **API Permissions**, and make sure to add the follow permissions:
+    * User.Read (enabled by default)
+    * email
+    * offline_access
+    * openid
+    * profile
+12. Scroll to the bottom of the page and click on "Save".
+
+13. The bot uses `MICROSOFT_APP_ID` and `MICROSOFT_APP_PASSWORD`, so these should already be set. No further changes needed!
+
+
+#### Update your Microsoft Teams application manifest
+
+Add new properties to your Microsoft Teams manifest:
+
+* **WebApplicationInfo** - The parent of the following elements.
+* **Id** - The client ID of the application. This is an application ID that you obtain as part of registering the application with Azure AD 1.0 endpoint.
+* **Resource** - The domain and subdomain of your application. This is the same URI (including the `api://` protocol) that you used when registering the app in AAD. The domain part of this URI should match the domain, including any subdomains, used in the URLs in the section of your Teams application manifest.
+
+```json
+"webApplicationInfo": {
+  "id": "<application_GUID here>",
+  "resource": "<web_API resource here>"
+}
+```
+
+### Using LinkedIn
 1. Follow the instructions in [Step 1 — Configuring your LinkedIn application](https://developer.linkedin.com/docs/oauth2) to create and configure a LinkedIn application for OAuth 2.
 2. In "Authorized Redirect URLs", add `https://<your_ngrok_url>/auth/linkedIn/callback`.
 3. Note your app's "Client ID" and "Client Secret".
 4. Set the environment variables (or equivalent config) `LINKEDIN_CLIENT_ID` = `<your_client_id>`, and `LINKEDIN_CLIENT_SECRET` = `<your_client_secret>`.
 
-### Using Google 
-1. Obtain OAuth2 client credentials from the [Google API Console](https://console.developers.google.com). Enable access to the [Google People API](https://developers.google.com/people/). 
+### Using Google
+1. Obtain OAuth2 client credentials from the [Google API Console](https://console.developers.google.com). Enable access to the [Google People API](https://developers.google.com/people/).
 2. In "Authorized redirect URLs", add `https://<your_ngrok_url>/auth/google/callback`.
 3. Note your app's "Client ID" and "Client Secret".
 4. Set the environment variables (or equivalent config) `GOOGLE_CLIENT_ID` = `<your_client_id>`, and `GOOGLE_CLIENT_SECRET` = `<your_client_secret>`.
