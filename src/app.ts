@@ -105,8 +105,10 @@ app.get("/tab/silent-start", (req, res) => { res.render("tab/silent/silent-start
 app.get("/tab/silent-end", (req, res) => { res.render("tab/silent/silent-end"); });
 app.get("/tab/sso", (req, res) => { res.render("tab/sso/sso"); });
 
-let openIdMetadata = new apis.OpenIdMetadata("https://login.microsoftonline.com/common/.well-known/openid-configuration");
-let validateIdToken = new apis.ValidateIdToken(openIdMetadata, appId).listen();     // Middleware to validate id_token
+let openIdMetadataV1 = new apis.OpenIdMetadata("https://login.microsoftonline.com/common/.well-known/openid-configuration");
+let openIdMetadataV2 = new apis.OpenIdMetadata("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration");
+let validateIdToken = new apis.ValidateIdToken(openIdMetadataV1, openIdMetadataV2, appId).listen();     // Middleware to validate id_token
+
 app.get("/api/decodeToken", validateIdToken, new apis.DecodeIdToken().listen());
 app.get("/api/getProfileFromGraph", validateIdToken, new apis.GetProfileFromGraph(config.get("app.appId"), config.get("app.appPassword")).listen());
 app.get("/api/getProfilesFromBot", validateIdToken, async (req, res) => {

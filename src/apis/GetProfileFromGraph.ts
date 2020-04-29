@@ -71,8 +71,18 @@ export class GetProfileFromGraph {
                         requested_token_use: "on_behalf_of",
                         scope: "https://graph.microsoft.com/User.Read",
                     } as any;
-                    let tokenResponse = await request.post({ url: tokenEndpoint, form: params, json: true });
-                    graphAccessToken = tokenResponse.access_token;
+                    try {
+                        let tokenResponse = await request.post({ url: tokenEndpoint, form: params, json: true });
+                        graphAccessToken = tokenResponse.access_token;
+                    }
+                    catch (ex) {
+                        // If this exception is due to additional consent required,
+                        // the client code can use this show a consent popup
+
+                        let code = ex.statusCode || 500;
+                        console.error("ex: ", ex);
+                        res.status(code).send(ex);
+                    }
                     break;
                 }
 
