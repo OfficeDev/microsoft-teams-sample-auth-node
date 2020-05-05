@@ -44,7 +44,7 @@ gulp.task('clean', function () {
 /**
  * Lint all TypeScript files.
  */
-gulp.task('ts:lint', [], function () {
+gulp.task('ts:lint', function () {
     if (!process.env.GLITCH_NO_LINT) {
         return gulp
             .src(filesToLint)
@@ -60,7 +60,7 @@ gulp.task('ts:lint', [], function () {
 /**
  * Compile TypeScript and include references to library.
  */
-gulp.task('ts', ['clean'], function() {
+gulp.task('ts', function() {
     return tsProject
         .src()
         .pipe(sourcemaps.init())
@@ -72,7 +72,7 @@ gulp.task('ts', ['clean'], function() {
 /**
  * Copy statics to build directory.
  */
-gulp.task('statics:copy', ['clean'], function () {
+gulp.task('statics:copy', function () {
     return gulp.src(staticFiles, { base: '.' })
         .pipe(gulp.dest('./build'));
 });
@@ -80,7 +80,8 @@ gulp.task('statics:copy', ['clean'], function () {
 /**
  * Build application.
  */
-gulp.task('build', ['clean', 'ts:lint', 'ts', 'statics:copy']);
+gulp.task('build', gulp.parallel('ts:lint', 'ts', 'statics:copy'));
+gulp.task('rebuild', gulp.series('clean', gulp.parallel('ts:lint', 'ts', 'statics:copy')));
 
 /**
  * Build manifest
@@ -94,7 +95,7 @@ gulp.task('generate-manifest', function() {
 /**
  * Run tests.
  */
-gulp.task('test', ['ts', 'statics:copy'], function() {
+gulp.task('test', gulp.series(gulp.parallel('ts', 'statics:copy'), function() {
     return gulp
         .src('build/test/' + options.specFilter + '.spec.js', {read: false})
         .pipe(mocha({cwd: 'build/src'}))
@@ -104,12 +105,12 @@ gulp.task('test', ['ts', 'statics:copy'], function() {
         .once('end', function () {
             process.exit();
         });
-});
+}));
 
 /**
  * Package up app into a ZIP file for Azure deployment.
  */
-gulp.task('package', ['build'], function () {
+gulp.task('package', gulp.series('rebuild', function () {
     var packagePaths = [
         'build/**/*',
         'public/**/*',
@@ -134,18 +135,18 @@ gulp.task('package', ['build'], function () {
     return gulp.src(packagePaths, { base: '.' })
         .pipe(zip(options.packageName))
         .pipe(gulp.dest(options.packagePath));
-});
+}));
 
-gulp.task('server:start', ['build'], function() {
+gulp.task('server:start', gulp.series('build', function() {
     server.listen({path: 'app.js', cwd: 'build/src'}, function(error) {
         console.error(error);
     });
-});
+}));
 
-gulp.task('server:restart', ['build'], function() {
+gulp.task('server:restart', gulp.series('build', function() {
     server.restart();
-});
+}));
 
-gulp.task('default', ['server:start'], function() {
+gulp.task('default', gulp.series('server:start', function() {
     gulp.watch(filesToWatch, ['server:restart']);
-});
+}));
