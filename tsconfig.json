@@ -4,6 +4,7 @@
     "noImplicitAny": false,
     "removeComments": false,
     "preserveConstEnums": true,
+    "noUnusedLocals": true,
     "sourceMap": true,
     "target": "es6",
     "outDir": "build",
