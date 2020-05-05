@@ -80,7 +80,7 @@
                 failureCallback: function (error) {
                     console.log('SSO failureCallback error: ', error);
                     $('#btnSSO').css({ display: "" });
-                    handleAuthError(error);
+                    handleAuthError(error, "divError");
                 }
             };
             microsoftTeams.authentication.getAuthToken(authTokenRequest);
@@ -104,7 +104,7 @@
                 },
                 failureCallback: function (reason) {
                     console.log("Login failed: " + reason);
-                    handleAuthError(reason);
+                    handleAuthError(reason, "divGraphProfileError");
                 }
             });
         }
@@ -205,8 +205,8 @@
         }
 
         // Show error information
-        function handleAuthError(reason) {
-            $("#divError").text(reason).css({ display: "" });
+        function handleAuthError(reason, errorDivId) {
+            $("#"+errorDivId).text(reason).css({ display: "" });
             $("#divProfile").css({ display: "none" });
         }
 
