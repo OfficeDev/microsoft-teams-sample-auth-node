@@ -138,9 +138,6 @@
                             .appendTo(claimsDiv);
                     }
 
-                    // The id token for a guest (external) user will not have a "upn" claim.
-                    // Instead it has a "unique_name" claim, which is the username in the home organization/identity provider.
-
                     $("#divIdTokenClaims").css({ display: "" });
                     $("#divIdTokenError").css({ display: "none" });
                 },
