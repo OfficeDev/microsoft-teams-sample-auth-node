@@ -22,7 +22,7 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 let express = require("express");
-let exphbs  = require("express-handlebars");
+let exphbs = require("express-handlebars");
 import { Request, Response } from "express";
 let bodyParser = require("body-parser");
 let favicon = require("serve-favicon");
@@ -134,7 +134,7 @@ if (app.get("env") === "development") {
 
 // production error handler
 // no stacktraces leaked to user
-app.use(function(err: any, req: Request, res: Response, next: Function): void {
+app.use(function (err: any, req: Request, res: Response, next: Function): void {
     logger.error("Failed request", err);
     res.sendStatus(err.status || 500);
 });

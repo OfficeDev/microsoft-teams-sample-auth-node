@@ -86,7 +86,11 @@ export class GetProfileFromGraph {
                 // the client code can use this show a consent popup
 
                 console.error("ex: ", ex);
-                let code = (ex.statusCode === 401 || ex.statusCode === 403) ? ex.statusCode : 500;
+                let code = this.isInvalidGrant(ex)
+                    ? 403
+                    : ex.statusCode === 401 || ex.statusCode === 403
+                        ? ex.statusCode
+                        : 500;
                 // We're propagating the error to make it easy to see the error on the client, but a production app should not leak information this way.
                 res.status(code).send(ex);
             }
@@ -109,4 +113,7 @@ export class GetProfileFromGraph {
         };
     }
 
+    private isInvalidGrant(ex: any): boolean {
+        return ex.error && ex.error.error === "invalid_grant";
+    }
 }
