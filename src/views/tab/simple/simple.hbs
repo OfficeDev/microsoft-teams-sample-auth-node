@@ -44,6 +44,7 @@
         <h2>Claims from id_token</h2>
         <div id="divIdTokenError" style="display: none" class="auth-data"></div>
         <div id="divIdTokenClaims" style="display: none" class="auth-data"></div>
+        <p id="divRawIdToken" style="display: none" class="auth-data"></p>
 
         <p>
             <h2>Profile from Microsoft Graph</h2>
@@ -79,7 +80,7 @@
                         localStorage.removeItem(result);
 
                         let tokenResult = JSON.parse(data);
-                        showIdTokenClaims(tokenResult.idToken);
+                        showIdTokenAndClaims(tokenResult.idToken);
                         getUserProfile(tokenResult.accessToken);
                     },
                     failureCallback: function (reason) {
@@ -89,7 +90,9 @@
                 });
             }
 
-            function showIdTokenClaims(idToken) {
+            function showIdTokenAndClaims(idToken) {
+                $("#divRawIdToken").text(idToken).show();
+
                 $.ajax({
                     url: window.location.origin + "/api/decodeToken",
                     beforeSend: function(request) {
@@ -109,13 +112,13 @@
                         // The id token for a guest (external) user will not have a "upn" claim.
                         // Instead it has a "unique_name" claim, which is the username in the home organization/identity provider.
 
-                        $("#divIdTokenClaims").css({ display: "" });
-                        $("#divIdTokenError").css({ display: "none" });
+                        $("#divIdTokenClaims").show();
+                        $("#divIdTokenError").hide();
                     },
                     error: function (xhr, textStatus, errorThrown) {
                         console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
-                        $("#divIdTokenError").text(errorThrown).css({ display: "" });
-                        $("#divIdTokenClaims").css({ display: "none" });
+                        $("#divIdTokenError").text(errorThrown).show();
+                        $("#divIdTokenClaims").hide();
                     },
                 });
             }
@@ -141,27 +144,27 @@
                         $("#profileMail").text(profile.mail);
                         $("#profileUpn").text(profile.userPrincipalName);
                         $("#profileObjectId").text(profile.id);
-                        $("#divProfile").css({ display: "" });
-                        $("#divError").css({ display: "none" });
+                        $("#divProfile").show();
+                        $("#divError").hide();
                     },
                     error: function (xhr, textStatus, errorThrown) {
                         console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
-                        $("#divError").text(errorThrown).css({ display: "" });
-                        $("#divProfile").css({ display: "none" });
+                        $("#divError").text(errorThrown).show();
+                        $("#divProfile").hide();
                     },
                 });
             }
 
             // Show error information
             function handleAuthError(reason) {
-                $("#divError").text(reason).css({ display: "" });
-                $("#divProfile").css({ display: "none" });
+                $("#divError").text(reason).show();
+                $("#divProfile").hide();
             }
 
             // Clear all information in tab
             function hideProfileAndError() {
-                $("#divError").text("").css({ display: "none" });
-                $("#divProfile").css({ display: "none" });
+                $("#divError").text("").hide();
+                $("#divProfile").hide();
             }
         </script>
     </body>

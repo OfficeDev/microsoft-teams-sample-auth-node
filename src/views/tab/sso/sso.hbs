@@ -44,8 +44,9 @@
     <!-- Result -->
 
     <h2>Claims from SSO access_token</h2>
-    <div id="divIdTokenError" style="display: none" class="auth-data"></div>
-    <div id="divIdTokenClaims" style="display: none" class="auth-data"></div>
+    <div id="divAccessTokenError" style="display: none" class="auth-data"></div>
+    <div id="divAccessTokenClaims" style="display: none" class="auth-data"></div>
+    <p id="divRawAccessToken" style="display: none" class="auth-data"></p>
 
     <h2>Profile from Microsoft Graph (via On-Behalf-Of flow)</h2>
     <div id="divGraphProfileError" style="display: none" class="auth-data"></div>
@@ -76,13 +77,13 @@
         function showUserInformationUsingSSO() {
             var authTokenRequest = {
                 successCallback: function (result) {
-                    $('#btnSSO').css({ display: "none" });
-                    $("#btnAccess").css({ display: "none" });
+                    $('#btnSSO').hide();
+                    $("#btnAccess").hide();
                     showUserInformation(result);
                 },
                 failureCallback: function (error) {
                     console.log('SSO failureCallback error: ', error);
-                    $('#btnSSO').css({ display: "" });
+                    $('#btnSSO').show();
                     handleAuthError(error, "divError");
                 }
             };
@@ -119,11 +120,14 @@
 
         // Get the user's profile information
         function showUserInformation(accessToken) {
+            $("#divRawAccessToken").text(accessToken).show();
+
+            // This demonstrates what an application can do with the access token from tab SSO
 
             // A. The app can use the SSO token as proof of the user's identity.
-            // The /api/decodeToken endpoint takes an id_token in the Authorization header and validates it
-            // as per (https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-token-and-claims#idtokens).
-            // If successful, it returns the decoded token. Otherwise it return an HTTP 401 Unauthorized response.
+            // The /api/decodeToken endpoint takes an access token in the Authorization header and validates it
+            // as per (https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-token-and-claims).
+            // If successful, it returns the decoded token. Otherwise it returns an HTTP 401 Unauthorized response.
 
             $.ajax({
                 url: window.location.origin + "/api/decodeToken",
@@ -131,7 +135,7 @@
                     request.setRequestHeader("Authorization", "Bearer " + accessToken);
                 },
                 success: function (token) {
-                    let claimsDiv = $("#divIdTokenClaims");
+                    let claimsDiv = $("#divAccessTokenClaims");
                     claimsDiv.empty();
 
                     for (let claimId in token) {
@@ -141,21 +145,20 @@
                             .appendTo(claimsDiv);
                     }
 
-                    $("#divIdTokenClaims").css({ display: "" });
-                    $("#divIdTokenError").css({ display: "none" });
+                    $("#divAccessTokenClaims").show();
+                    $("#divAccessTokenError").hide();
                 },
                 error: function (xhr, textStatus, errorThrown) {
                     console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
-                    $("#divIdTokenError").text(errorThrown).css({ display: "" });
-                    $("#divIdTokenClaims").css({ display: "none" });
+                    
+                    $("#divAccessTokenError").text(errorThrown).show();
+                    $("#divAccessTokenClaims").hide();
                 },
             });
 
-            // B. The current implementation for SSO only grants consent for
-            // user-level permissions (email, profile, offline_access, openid)
-            // but not for other APIs. If your app needs further Graph scopes,
-            // there are some workarounds to enable this.
-            // This code prompts for user consent for additional scopes
+            // B. The current implementation for SSO only grants consent for OpenID Connect scopes (email, profile, openid)
+            // and offline_access, but not for other APIs. If your app needs further scopes, there are some workarounds to enable this.
+            // This code prompts for user consent to additional scopes.
 
             // Through the Azure AD On-Behalf-Of flow, the app can exchange it for an access token for
             // other APIs that the user has consented to. In this example, the app gets a Graph token and
@@ -178,12 +181,12 @@
                         }
                     }
 
-                    $("#divGraphProfile").css({ display: "" });
-                    $("#divGraphProfileError").css({ display: "none" });
+                    $("#divGraphProfile").show();
+                    $("#divGraphProfileError").hide();
                 },
                 error: function (xhr, textStatus, errorThrown) {
-
                     console.log('error getting profile: ', errorThrown);
+
                     // Extracting the error from the response that the server sends
                     // If the error contains consent_required or interaction_required codes
                     // then we can ask the user to grant additional consent to access Microsoft Graph
@@ -191,8 +194,8 @@
                     let subError = (xhr.responseJSON && xhr.responseJSON.error && xhr.responseJSON.error.suberror);
                     showConsentButton(err, subError);
 
-                    $("#divGraphProfileError").text(subError).css({ display: "" });
-                    $("#divGraphProfile").css({ display: "none" });
+                    $("#divGraphProfileError").text(subError).show();
+                    $("#divGraphProfile").hide();
                 },
             });
 
@@ -229,13 +232,13 @@
                         }
                     }
 
-                    $("#divBotProfiles").css({ display: "" });
-                    $("#divBotProfilesError").css({ display: "none" });
+                    $("#divBotProfiles").show();
+                    $("#divBotProfilesError").hide();
                 },
                 error: function (xhr, textStatus, errorThrown) {
                     console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
-                    $("#divBotProfilesError").text(errorThrown).css({ display: "" });
-                    $("#divBotProfiles").css({ display: "none" });
+                    $("#divBotProfilesError").text(errorThrown).show();
+                    $("#divBotProfiles").hide();
                 },
             });
         }
@@ -245,15 +248,15 @@
             if (err == "invalid_grant" && (subError == "consent_required" || subError == "interaction_required")) {
                 console.log("err: ", err);
                 console.log("sub err: ", subError);
-                $("#btnAccess").css({ display: "" });
+                $("#btnAccess").show();
             }
 
         }
 
         // Show error information
         function handleAuthError(reason, errorDivId) {
-            $("#"+errorDivId).text(reason).css({ display: "" });
-            $("#divProfile").css({ display: "none" });
+            $("#"+errorDivId).text(reason).show();
+            $("#divProfile").hide();
         }
 
     </script>
