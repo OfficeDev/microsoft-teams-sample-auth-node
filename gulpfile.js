@@ -98,13 +98,8 @@ gulp.task('generate-manifest', function() {
 gulp.task('test', gulp.series(gulp.parallel('ts', 'statics:copy'), function() {
     return gulp
         .src('build/test/' + options.specFilter + '.spec.js', {read: false})
-        .pipe(mocha({cwd: 'build/src'}))
-        .once('error', function () {
-            process.exit(1);
-        })
-        .once('end', function () {
-            process.exit();
-        });
+        .pipe(mocha({cwd: 'build/src', exit: true}))
+        .on('error', console.error);
 }));
 
 /**
