@@ -53,6 +53,9 @@
     <br />
     <button id="btnAccess" onclick="loginV2()" style="display: none">Grant access to Microsoft Graph</button>
 
+    <h2>Profile from account(s) linked through the bot</h2>
+    <div id="divBotProfilesError" style="display: none" class="auth-data"></div>
+    <div id="divBotProfiles" style="display: none" class="auth-data"></div>
 
     <script src="https://code.jquery.com/jquery-3.1.1.js"
         integrity="sha384-VC7EHu0lDzZyFfmjTPJq+DFyIn8TUGAJbEtpXquazFVr00Q/OOx//RjiZ9yU9+9m"
@@ -190,6 +193,49 @@
 
                     $("#divGraphProfileError").text(subError).css({ display: "" });
                     $("#divGraphProfile").css({ display: "none" });
+                },
+            });
+
+            // C) The access token serves as verifiable evidence of the user's identity, in particular, it has
+            // a claim of the user's Azure AD object id ("oid"). With the OID as a key, the app can share
+            // data betwen it's various capabilities (tab, bot, messaging extension). Here, the tab uses the
+            // /api/getProfilesFromBot endpoint to show  profiles from the various services that the user has
+            // signed in to via the bot.
+            $.ajax({
+                url: window.location.origin + "/api/getProfilesFromBot",
+                beforeSend: function(request) {
+                    request.setRequestHeader("Authorization", "Bearer " + accessToken);
+                },
+                success: function (profiles) {
+                    let profilesDiv = $("#divBotProfiles");
+                    profilesDiv.empty();
+
+                    if (Object.keys(profiles).length === 0) {
+                        profilesDiv.text("No accounts linked");
+                    } else {
+                        for (let profileName in profiles) {
+                            profilesDiv.append($("<h3>").text(profileName));
+
+                            let profile = profiles[profileName];
+                            for (let key in profile) {
+                                let value = profile[key];
+                                if ((key[0] !== "@") && value) {
+                                    $("<div>")
+                                        .append($("<b>").text(key + ": "))
+                                        .append($("<span>").text((value instanceof Object) ?  JSON.stringify(value) : value))
+                                        .appendTo(profilesDiv);
+                                }
+                            }
+                        }
+                    }
+
+                    $("#divBotProfiles").css({ display: "" });
+                    $("#divBotProfilesError").css({ display: "none" });
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
+                    $("#divBotProfilesError").text(errorThrown).css({ display: "" });
+                    $("#divBotProfiles").css({ display: "none" });
                 },
             });
         }
