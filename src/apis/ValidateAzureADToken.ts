@@ -26,10 +26,11 @@ import * as jwt from "jsonwebtoken";
 import { OpenIdMetadata } from "./OpenIdMetadata";
 
 // Middleware to validate the id_token from AAD in the Authorization header
-export class ValidateIdToken {
+export class ValidateAzureADToken {
 
     public constructor(
-        private openIdMetadata: OpenIdMetadata,
+        private openIdMetadataV1: OpenIdMetadata,
+        private openIdMetadataV2: OpenIdMetadata,
         private appId: string,
     ) { }
 
@@ -46,7 +47,18 @@ export class ValidateIdToken {
             // Decode token and get signing key
             const encodedToken = authHeaderMatch[1];
             const decodedToken = jwt.decode(encodedToken, { complete: true });
-            this.openIdMetadata.getKey(decodedToken["header"].kid, (key) => {
+            let openIdMetadata: OpenIdMetadata;
+
+            switch (decodedToken["payload"].ver) {
+                case "2.0":
+                    openIdMetadata = this.openIdMetadataV2;
+                    break;
+                case "1.0":
+                default:
+                    openIdMetadata = this.openIdMetadataV1;
+                    break;
+            }
+            openIdMetadata.getKey(decodedToken["header"].kid, (key) => {
                 if (!key) {
                     console.error("Invalid signing key or OpenId metadata document");
                     res.sendStatus(500);
@@ -56,7 +68,7 @@ export class ValidateIdToken {
                 // Verify token
                 const verifyOptions: jwt.VerifyOptions = {
                     algorithms: ["RS256", "RS384", "RS512"],
-                    issuer: this.openIdMetadata.getIssuer(decodedToken["payload"].tid),
+                    issuer: openIdMetadata.getIssuer(decodedToken["payload"].tid),
                     audience: this.appId,
                     clockTolerance: 300,
                 };

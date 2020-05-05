@@ -1,0 +1,216 @@
+<!--
+// Copyright (c) Microsoft Corporation
+// All rights reserved.
+//
+// MIT License:
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to
+// permit persons to whom the Software is furnished to do so, subject to
+// the following conditions:
+//
+// The above copyright notice and this permission notice shall be
+// included in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+// NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+// LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+// OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+// WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+-->
+
+<html>
+
+<head>
+    <title>SSO Authentication Sample</title>
+</head>
+
+<body>
+    <p>
+        This sample shows the basics of an single sign-on authentication flow in a Microsoft Teams tab.
+    </p>
+    <p>
+        The "Grant access to Microsoft Graph" button will appear only if additional consent is required.
+    </p>
+
+    <!-- Login button -->
+    <button id="btnSSO" style="display: none" onclick="showUserInformationUsingSSO()">Single Sign-On</button>
+
+    <p id="divError" style="display: none" class="auth-data"></p>
+    <!-- Result -->
+
+    <h2>Claims from SSO access_token</h2>
+    <div id="divIdTokenError" style="display: none" class="auth-data"></div>
+    <div id="divIdTokenClaims" style="display: none" class="auth-data"></div>
+
+    <h2>Profile from Microsoft Graph (via On-Behalf-Of flow)</h2>
+    <div id="divGraphProfileError" style="display: none" class="auth-data"></div>
+    <div id="divGraphProfile" style="display: none" class="auth-data"></div>
+    <br />
+    <button id="btnAccess" onclick="loginV2()" style="display: none">Grant access to Microsoft Graph</button>
+
+
+    <script src="https://code.jquery.com/jquery-3.1.1.js"
+        integrity="sha384-VC7EHu0lDzZyFfmjTPJq+DFyIn8TUGAJbEtpXquazFVr00Q/OOx//RjiZ9yU9+9m"
+        crossorigin="anonymous"></script>
+    <script src="https://statics.teams.cdn.office.net/sdk/v1.6.0/js/MicrosoftTeams.min.js"
+        integrity="sha384-mhp2E+BLMiZLe7rDIzj19WjgXJeI32NkPvrvvZBrMi5IvWup/1NUfS5xuYN5S3VT"
+        crossorigin="anonymous"></script>
+    <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.17/js/adal.min.js"
+        integrity="sha384-BIOS/65fbAsb2XiCCSTlZSTTl0ZgqkOU522dpyk5meOnN2EOQ3uH+QpqEtoAtmBn"
+        crossorigin="anonymous"></script>
+
+    <script type="text/javascript">
+        microsoftTeams.initialize();
+
+        // Trying to silently login using SSO
+        showUserInformationUsingSSO();
+
+        function showUserInformationUsingSSO() {
+            var authTokenRequest = {
+                successCallback: function (result) {
+                    $('#btnSSO').css({ display: "none" });
+                    $("#btnAccess").css({ display: "none" });
+                    showUserInformation(result);
+                },
+                failureCallback: function (error) {
+                    console.log('SSO failureCallback error: ', error);
+                    $('#btnSSO').css({ display: "" });
+                    handleAuthError(error, "divError");
+                }
+            };
+            microsoftTeams.authentication.getAuthToken(authTokenRequest);
+        }
+
+        // Login to Azure AD and get access to Microsoft Graph
+        function login(url) {
+
+            microsoftTeams.authentication.authenticate({
+                url: url,
+                width: 600,
+                height: 535,
+                successCallback: function (result) {
+                    console.log("Login succeeded: " + result);
+
+                    let data = localStorage.getItem(result);
+                    localStorage.removeItem(result);
+
+                    let tokenResult = JSON.parse(data);
+                    showUserInformationUsingSSO();
+                },
+                failureCallback: function (reason) {
+                    console.log("Login failed: " + reason);
+                    handleAuthError(reason, "divGraphProfileError");
+                }
+            });
+        }
+
+        function loginV2() {
+            // reusing the same flow to call v2 endpoint as in simple auth
+            login(window.location.origin + "/tab/simple-start-v2");
+        }
+
+        // Get the user's profile information
+        function showUserInformation(accessToken) {
+
+            // A. The app can use the SSO token as proof of the user's identity.
+            // The /api/decodeToken endpoint takes an id_token in the Authorization header and validates it
+            // as per (https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-token-and-claims#idtokens).
+            // If successful, it returns the decoded token. Otherwise it return an HTTP 401 Unauthorized response.
+
+            $.ajax({
+                url: window.location.origin + "/api/decodeToken",
+                beforeSend: function (request) {
+                    request.setRequestHeader("Authorization", "Bearer " + accessToken);
+                },
+                success: function (token) {
+                    let claimsDiv = $("#divIdTokenClaims");
+                    claimsDiv.empty();
+
+                    for (let claimId in token) {
+                        $("<div>")
+                            .append($("<b>").text(claimId + ": "))
+                            .append($("<span>").text(token[claimId]))
+                            .appendTo(claimsDiv);
+                    }
+
+                    $("#divIdTokenClaims").css({ display: "" });
+                    $("#divIdTokenError").css({ display: "none" });
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
+                    $("#divIdTokenError").text(errorThrown).css({ display: "" });
+                    $("#divIdTokenClaims").css({ display: "none" });
+                },
+            });
+
+            // B. The current implementation for SSO only grants consent for
+            // user-level permissions (email, profile, offline_access, openid)
+            // but not for other APIs. If your app needs further Graph scopes,
+            // there are some workarounds to enable this.
+            // This code prompts for user consent for additional scopes
+
+            // Through the Azure AD On-Behalf-Of flow, the app can exchange it for an access token for
+            // other APIs that the user has consented to. In this example, the app gets a Graph token and
+            // returns the user's full Azure AD profile.
+            $.ajax({
+                url: window.location.origin + "/api/getProfileFromGraph",
+                beforeSend: function (request) {
+                    request.setRequestHeader("Authorization", "Bearer " + accessToken);
+                },
+                success: function (profile) {
+                    let profileDiv = $("#divGraphProfile");
+                    profileDiv.empty();
+
+                    for (let key in profile) {
+                        if ((key[0] !== "@") && profile[key]) {
+                            $("<div>")
+                                .append($("<b>").text(key + ": "))
+                                .append($("<span>").text(profile[key]))
+                                .appendTo(profileDiv);
+                        }
+                    }
+
+                    $("#divGraphProfile").css({ display: "" });
+                    $("#divGraphProfileError").css({ display: "none" });
+                },
+                error: function (xhr, textStatus, errorThrown) {
+
+                    console.log('error getting profile: ', errorThrown);
+                    // Extracting the error from the response that the server sends
+                    // If the error contains consent_required or interaction_required codes
+                    // then we can ask the user to grant additional consent to access Microsoft Graph
+                    let err = xhr.responseJSON && xhr.responseJSON.error && xhr.responseJSON.error.error;
+                    let subError = (xhr.responseJSON && xhr.responseJSON.error && xhr.responseJSON.error.suberror);
+                    showConsentButton(err, subError);
+
+                    $("#divGraphProfileError").text(subError).css({ display: "" });
+                    $("#divGraphProfile").css({ display: "none" });
+                },
+            });
+        }
+
+        function showConsentButton(err, subError) {
+            // Only show consent button for invalid_grant due to consent_required or interaction_required
+            if (err == "invalid_grant" && (subError == "consent_required" || subError == "interaction_required")) {
+                console.log("err: ", err);
+                console.log("sub err: ", subError);
+                $("#btnAccess").css({ display: "" });
+            }
+
+        }
+
+        // Show error information
+        function handleAuthError(reason, errorDivId) {
+            $("#"+errorDivId).text(reason).css({ display: "" });
+            $("#divProfile").css({ display: "none" });
+        }
+
+    </script>
+</body>
+
+</html>

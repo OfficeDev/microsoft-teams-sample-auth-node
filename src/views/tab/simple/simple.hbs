@@ -33,7 +33,7 @@
         </p>
         <p>
             Click on the "Login" button below to login to Azure AD, and grant the sample app access to your profile information.
-            The app will fetch your profile using Microsoft Graph, and display information about you below. 
+            The app will fetch your profile using Microsoft Graph, and display information about you below.
         </p>
 
         <!-- Login button -->
@@ -41,7 +41,12 @@
         <button onclick="loginV2()">Login to Azure AD (V2 endpoint)</button>
 
         <!-- Result -->
+        <h2>Claims from id_token</h2>
+        <div id="divIdTokenError" style="display: none" class="auth-data"></div>
+        <div id="divIdTokenClaims" style="display: none" class="auth-data"></div>
+
         <p>
+            <h2>Profile from Microsoft Graph</h2>
             <div id="divError" style="display: none"></div>
             <div id="divProfile" style="display: none">
                 <div><b>Name:</b> <span id="profileDisplayName"/></div>
@@ -53,15 +58,15 @@
         </p>
 
         <script src="https://code.jquery.com/jquery-3.1.1.js" integrity="sha384-VC7EHu0lDzZyFfmjTPJq+DFyIn8TUGAJbEtpXquazFVr00Q/OOx//RjiZ9yU9+9m" crossorigin="anonymous"></script>
-        <script src="https://unpkg.com/@microsoft/teams-js@1.4.2/dist/MicrosoftTeams.min.js" integrity="sha384-DcoNUuQTjpW5Sw3msonn/2ojgtNvtC5fCGd5U9RUpL3g1hla1LzHz8I9YIYSXe6q" crossorigin="anonymous"></script>
-        <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.17/js/adal.min.js" integrity="sha384-BIOS/65fbAsb2XiCCSTlZSTTl0ZgqkOU522dpyk5meOnN2EOQ3uH+QpqEtoAtmBn" crossorigin="anonymous"></script>        
+        <script src="https://statics.teams.cdn.office.net/sdk/v1.6.0/js/MicrosoftTeams.min.js" integrity="sha384-mhp2E+BLMiZLe7rDIzj19WjgXJeI32NkPvrvvZBrMi5IvWup/1NUfS5xuYN5S3VT" crossorigin="anonymous"></script>
+        <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.17/js/adal.min.js" integrity="sha384-BIOS/65fbAsb2XiCCSTlZSTTl0ZgqkOU522dpyk5meOnN2EOQ3uH+QpqEtoAtmBn" crossorigin="anonymous"></script>
 
         <script type="text/javascript">
             microsoftTeams.initialize();
 
             // Login to Azure AD and get access to Microsoft Graph
             function login(url) {
-                hideProfileAndError(); 
+                hideProfileAndError();
 
                 microsoftTeams.authentication.authenticate({
                     url: url,
@@ -72,14 +77,46 @@
 
                         let data = localStorage.getItem(result);
                         localStorage.removeItem(result);
-                        
+
                         let tokenResult = JSON.parse(data);
+                        showIdTokenClaims(tokenResult.idToken);
                         getUserProfile(tokenResult.accessToken);
                     },
                     failureCallback: function (reason) {
                         console.log("Login failed: " + reason);
                         handleAuthError(reason);
                     }
+                });
+            }
+
+            function showIdTokenClaims(idToken) {
+                $.ajax({
+                    url: window.location.origin + "/api/decodeToken",
+                    beforeSend: function(request) {
+                        request.setRequestHeader("Authorization", "Bearer " + idToken);
+                    },
+                    success: function (token) {
+                        let claimsDiv = $("#divIdTokenClaims");
+                        claimsDiv.empty();
+
+                        for (let claimId in token) {
+                            $("<div>")
+                                .append($("<b>").text(claimId + ": "))
+                                .append($("<span>").text(token[claimId]))
+                                .appendTo(claimsDiv);
+                        }
+
+                        // The id token for a guest (external) user will not have a "upn" claim.
+                        // Instead it has a "unique_name" claim, which is the username in the home organization/identity provider.
+
+                        $("#divIdTokenClaims").css({ display: "" });
+                        $("#divIdTokenError").css({ display: "none" });
+                    },
+                    error: function (xhr, textStatus, errorThrown) {
+                        console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
+                        $("#divIdTokenError").text(errorThrown).css({ display: "" });
+                        $("#divIdTokenClaims").css({ display: "none" });
+                    },
                 });
             }
 

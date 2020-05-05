@@ -58,21 +58,21 @@
         <button id="btnLogout" onclick="logout()" style="display: none">Logout (Silent)</button>
 
         <script src="https://code.jquery.com/jquery-3.1.1.js" integrity="sha384-VC7EHu0lDzZyFfmjTPJq+DFyIn8TUGAJbEtpXquazFVr00Q/OOx//RjiZ9yU9+9m" crossorigin="anonymous"></script>
-        <script src="https://unpkg.com/@microsoft/teams-js@1.4.2/dist/MicrosoftTeams.min.js" integrity="sha384-DcoNUuQTjpW5Sw3msonn/2ojgtNvtC5fCGd5U9RUpL3g1hla1LzHz8I9YIYSXe6q" crossorigin="anonymous"></script>
+        <script src="https://statics.teams.cdn.office.net/sdk/v1.6.0/js/MicrosoftTeams.min.js" integrity="sha384-mhp2E+BLMiZLe7rDIzj19WjgXJeI32NkPvrvvZBrMi5IvWup/1NUfS5xuYN5S3VT" crossorigin="anonymous"></script>
 
         <!-- Check before upgrading your ADAL version, as this sample depends on an internal function to authenticate silently -->
         <script src="https://secure.aadcdn.microsoftonline-p.com/lib/1.0.17/js/adal.min.js" integrity="sha384-BIOS/65fbAsb2XiCCSTlZSTTl0ZgqkOU522dpyk5meOnN2EOQ3uH+QpqEtoAtmBn" crossorigin="anonymous"></script>
-        
+
         <script type="text/javascript">
             microsoftTeams.initialize();
-    
+
             // Parse query parameters
             let queryParams = getQueryParameters();
             let loginHint = queryParams["loginHint"];
             let userObjectId = queryParams["userObjectId"];
 
-            // Use the tenant id of the current organization. For guest users, we want an access token for 
-            // the tenant we are currently in, not the home tenant of the guest. 
+            // Use the tenant id of the current organization. For guest users, we want an access token for
+            // the tenant we are currently in, not the home tenant of the guest.
             let tenantId = queryParams["tenantId"] || "common";
 
             // ADAL.js configuration
@@ -97,16 +97,16 @@
             } else {
                 config.extraQueryParameter = "scope=openid+profile";
             }
-    
+
             let authContext = new AuthenticationContext(config);
-    
+
             // See if there's a cached user and it matches the expected user
             let user = authContext.getCachedUser();
             if (user && (user.profile.oid !== userObjectId)) {
                 // User doesn't match, clear the cache
                 authContext.clearCache();
             }
-    
+
             // Get the id token (which is the token for resource = clientId)
             authContext.acquireToken(config.clientId, function (errDesc, token, err, tokenType) {
                 if (token) {
@@ -130,11 +130,11 @@
             });
 
             // To get an access token to a resource like Graph,
-            // 1. Provide the resource id to acquireToken() 
+            // 1. Provide the resource id to acquireToken()
             //        authContext.acquireToken("https://graph.microsoft.com", function (errDesc, token, err, tokenType) { ... })
-            // 2. Remove the check for tokenType from the callback, because access token is the correct type. 
-            // 3. In the success callback below, call acquireToken again. 
-    
+            // 2. Remove the check for tokenType from the callback, because access token is the correct type.
+            // 3. In the success callback below, call acquireToken again.
+
             // Interactive login to Azure AD
             function login() {
                 $(".auth-data").css({ display: "none" });
@@ -150,7 +150,7 @@
                         if (idToken) {
                             showUserInformation(idToken);
                         } else {
-                            console.error("Error getting cached id token. This should never happen.");                            
+                            console.error("Error getting cached id token. This should never happen.");
                             // At this point we have to get the user involved, so show the login button
                             $("#btnLogin").css({ display: "" });
                         };
@@ -169,7 +169,7 @@
                 });
             }
 
-            // Show information about the logged-in user    
+            // Show information about the logged-in user
             function showUserInformation(idToken) {
                 // This demonstrates what an application can do with the id_token
 
@@ -206,9 +206,9 @@
                     },
                 });
 
-                // B) Through the Azure AD On-Behalf-Of flow, the app can exchange it for an access token for 
+                // B) Through the Azure AD On-Behalf-Of flow, the app can exchange it for an access token for
                 // other APIs that the user has consented to. In this example, the app gets a Graph token and
-                // returns the user's full Azure AD profile. 
+                // returns the user's full Azure AD profile.
                 $.ajax({
                     url: window.location.origin + "/api/getProfileFromGraph",
                     beforeSend: function(request) {
@@ -272,7 +272,7 @@
 
                         $("#divBotProfiles").css({ display: "" });
                         $("#divBotProfilesError").css({ display: "none" });
-                        
+
                         // Show the logout button and hide the login button
                         $("#btnLogin").css({ display: "none" });
                         $("#btnLogout").css({ display: "" });
