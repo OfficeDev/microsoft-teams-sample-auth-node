@@ -26,7 +26,7 @@ import * as jwt from "jsonwebtoken";
 import { OpenIdMetadata } from "./OpenIdMetadata";
 
 // Middleware to validate the id_token from AAD in the Authorization header
-export class ValidateIdToken {
+export class ValidateAzureADToken {
 
     public constructor(
         private openIdMetadataV1: OpenIdMetadata,

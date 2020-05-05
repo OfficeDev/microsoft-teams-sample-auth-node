@@ -3,4 +3,4 @@
 export * from "./DecodeIdToken";
 export * from "./GetProfileFromGraph";
 export * from "./OpenIdMetadata";
-export * from "./ValidateIdToken";
+export * from "./ValidateAzureADToken";

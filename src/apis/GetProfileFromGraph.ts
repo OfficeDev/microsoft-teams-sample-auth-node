@@ -38,14 +38,15 @@ export class GetProfileFromGraph {
             let token = res.locals.token;
             let tenantId = token["tid"];
             let graphAccessToken: string;
-
+            let tokenEndpoint: string;
+            let params: any;
             // The version of the endpoint to use for OBO flow must match the one used to get the initial token
             switch (token.ver) {
                 case "1.0":
                 {
                     // AAD v1 endpoint token
-                    let tokenEndpoint = `https://login.microsoftonline.com/${tenantId}/oauth2/token`;
-                    let params = {
+                    tokenEndpoint = `https://login.microsoftonline.com/${tenantId}/oauth2/token`;
+                    params = {
                         grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
                         assertion: encodedToken,
                         client_id: this.clientId,
@@ -54,16 +55,14 @@ export class GetProfileFromGraph {
                         requested_token_use: "on_behalf_of",
                         scope: "openid",
                     } as any;
-                    let tokenResponse = await request.post({ url: tokenEndpoint, form: params, json: true });
-                    graphAccessToken = tokenResponse.access_token;
                     break;
                 }
 
                 case "2.0":
                 {
                     // AAD v2 endpoint token
-                    let tokenEndpoint = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
-                    let params = {
+                    tokenEndpoint = `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/token`;
+                    params = {
                         grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
                         assertion: encodedToken,
                         client_id: this.clientId,
@@ -71,23 +70,25 @@ export class GetProfileFromGraph {
                         requested_token_use: "on_behalf_of",
                         scope: "https://graph.microsoft.com/User.Read",
                     } as any;
-                    try {
-                        let tokenResponse = await request.post({ url: tokenEndpoint, form: params, json: true });
-                        graphAccessToken = tokenResponse.access_token;
-                    }
-                    catch (ex) {
-                        // If this exception is due to additional consent required,
-                        // the client code can use this show a consent popup
-
-                        let code = ex.statusCode || 500;
-                        console.error("ex: ", ex);
-                        res.status(code).send(ex);
-                    }
                     break;
                 }
 
                 default:
                     throw new Error(`Unsupported Azure AD endpoint version ${token.ver}`);
+            }
+
+            try {
+                let tokenResponse = await request.post({ url: tokenEndpoint, form: params, json: true });
+                graphAccessToken = tokenResponse.access_token;
+            }
+            catch (ex) {
+                // If this exception is due to additional consent required,
+                // the client code can use this show a consent popup
+
+                console.error("ex: ", ex);
+                let code = (ex.statusCode === 401 || ex.statusCode === 403) ? ex.statusCode : 500;
+                // We're propagating the error to make it easy to see the error on the client, but a production app should not leak information this way.
+                res.status(code).send(ex);
             }
 
             // The OBO grant flow can fail with error interaction_required if there are Conditional Access policies set.
