@@ -196,7 +196,7 @@
 
         function showConsentButton(err, subError) {
             // Only show consent button for invalid_grant due to consent_required or interaction_required
-            if (err == "invalid_grant" && (subError == "consent_required" || subError == "interaction_required")) {
+            if (err == "invalid_grant" || err == "interaction_required")) {
                 console.log("err: ", err);
                 console.log("sub err: ", subError);
                 $("#btnAccess").css({ display: "" });

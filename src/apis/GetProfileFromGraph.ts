@@ -86,7 +86,7 @@ export class GetProfileFromGraph {
                 // the client code can use this show a consent popup
 
                 console.error("ex: ", ex);
-                let code = this.isInvalidGrant(ex)
+                let code = this.needsInteraction(ex)
                     ? 403
                     : ex.statusCode === 401 || ex.statusCode === 403
                         ? ex.statusCode
@@ -113,7 +113,7 @@ export class GetProfileFromGraph {
         };
     }
 
-    private isInvalidGrant(ex: any): boolean {
-        return ex.error && ex.error.error === "invalid_grant";
+    private needsInteraction(ex: any): boolean {
+        return ex.error && (ex.error.error === "invalid_grant" || ex.error.error === "interaction_required")
     }
 }
