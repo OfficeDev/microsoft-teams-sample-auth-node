@@ -28,7 +28,7 @@ var tsProject = ts.createProject('./tsconfig.json', {
 
 var filesToWatch = ['**/*.ts', '!node_modules/**'];
 var filesToLint = ['**/*.ts', '!src/typings/**', '!node_modules/**'];
-var staticFiles = ['src/**/*.json', 'src/**/*.hbs'];
+var staticFiles = ['**/*.json', '**/*.hbs'];
 
 /**
  * Clean build output.
@@ -73,7 +73,7 @@ gulp.task('ts', function() {
  * Copy statics to build directory.
  */
 gulp.task('statics:copy', function () {
-    return gulp.src(staticFiles, { base: '.' })
+    return gulp.src(staticFiles, { base: 'src' })
         .pipe(gulp.dest('./build'));
 });
 

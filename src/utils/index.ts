@@ -23,6 +23,4 @@
 
 // Re-export types from files in utils
 
-export * from "./MessageUtils";
-export * from "./AuthenticationUtils";
 export * from "./Logger";
