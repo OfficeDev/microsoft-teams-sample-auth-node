@@ -114,6 +114,6 @@ export class GetProfileFromGraph {
     }
 
     private needsInteraction(ex: any): boolean {
-        return ex.error && (ex.error.error === "invalid_grant" || ex.error.error === "interaction_required")
+        return ex.error && (ex.error.error === "invalid_grant" || ex.error.error === "interaction_required");
     }
 }
