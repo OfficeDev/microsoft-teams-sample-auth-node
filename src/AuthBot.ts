@@ -22,6 +22,7 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import * as builder from "botbuilder";
+import { RootDialog } from "./dialogs/RootDialog";
 
 // =========================================================
 // Auth Bot
@@ -29,12 +30,24 @@ import * as builder from "botbuilder";
 
 export class AuthBot extends builder.TeamsActivityHandler {
 
+    private dialogState: builder.StatePropertyAccessor<any>;
+
     constructor(
+        private adapter: builder.BotFrameworkAdapter,
         private conversationState: builder.ConversationState,
         private userState: builder.UserState,
+        private rootDialog: RootDialog,
     )
     {
         super();
+        this.dialogState = this.conversationState.createProperty("DialogState");
+        
+        this.adapter.onTurnError = this.onTurnError.bind(this);
+
+        this.onMessage(async (context, next) => {
+            await this.rootDialog.run(context, this.dialogState);
+            await next();
+        });
     }
 
     public async run(context: builder.TurnContext) {
@@ -64,5 +77,27 @@ export class AuthBot extends builder.TeamsActivityHandler {
         // return profiles;
 
         return {};
+    }
+
+    private async onTurnError(context: builder.TurnContext, error: Error) {
+            // This check writes out errors to console log .vs. app insights.
+            // NOTE: In production environment, you should consider logging this to Azure
+            //       application insights.
+            console.error(`\n [onTurnError] unhandled error: ${ error }`);
+
+            // Send a trace activity, which will be displayed in Bot Framework Emulator
+            await context.sendTraceActivity(
+                'OnTurnError Trace',
+                `${ error }`,
+                'https://www.botframework.com/schemas/error',
+                'TurnError'
+            );
+
+            // Send a message to the user
+            await context.sendActivity('The bot encountered an error or bug.');
+            await context.sendActivity('To continue to run this bot, please fix the bot source code.');
+
+            // Clear out state
+            await this.conversationState.clear(context);
     }
 }

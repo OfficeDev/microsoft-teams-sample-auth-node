@@ -33,6 +33,7 @@ import * as config from "config";
 import * as apis from "./apis";
 import { AuthBot } from "./AuthBot";
 import { logger } from "./utils/index";
+import { RootDialog } from "./dialogs/RootDialog";
 
 let app = express();
 let appId = config.get("app.appId");
@@ -62,7 +63,7 @@ const adapter = new builder.BotFrameworkAdapter({
     appId: config.get("bot.appId"),
     appPassword: config.get("bot.appPassword"),
 });
-let bot = new AuthBot(conversationState, userState);
+let bot = new AuthBot(adapter, conversationState, userState, new RootDialog());
 
 // Configure bot routes
 app.post("/api/messages", (req, res) => {
