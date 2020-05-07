@@ -63,6 +63,7 @@ const adapter = new builder.BotFrameworkAdapter({
     appId: config.get("bot.appId"),
     appPassword: config.get("bot.appPassword"),
 });
+
 let bot = new AuthBot(adapter, conversationState, userState, new RootDialog());
 
 // Configure bot routes

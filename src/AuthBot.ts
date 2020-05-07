@@ -21,8 +21,12 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import * as config from "config";
 import * as builder from "botbuilder";
 import { RootDialog } from "./dialogs/RootDialog";
+import { UserMappingMiddleware } from "./UserMappingMiddleware";
+import { ConversationReference, ConversationAccount, ChannelAccount } from "botbuilder";
+import { AzureADv1Provider } from "./providers";
 
 // =========================================================
 // Auth Bot
@@ -30,6 +34,7 @@ import { RootDialog } from "./dialogs/RootDialog";
 
 export class AuthBot extends builder.TeamsActivityHandler {
 
+    private aadObjectIdToBotUserMap: Map<string, any>;
     private dialogState: builder.StatePropertyAccessor<any>;
 
     constructor(
@@ -41,7 +46,10 @@ export class AuthBot extends builder.TeamsActivityHandler {
     {
         super();
         this.dialogState = this.conversationState.createProperty("DialogState");
-        
+
+        this.aadObjectIdToBotUserMap = new Map<string, any>();
+        this.adapter.use(new UserMappingMiddleware(this.aadObjectIdToBotUserMap));
+                
         this.adapter.onTurnError = this.onTurnError.bind(this);
 
         this.onMessage(async (context, next) => {
@@ -60,27 +68,31 @@ export class AuthBot extends builder.TeamsActivityHandler {
 
     // Get the user's profile information from all the identity providers that we have tokens for
     public async getUserProfilesAsync(aadObjectId: string): Promise<any> {
-        // let profiles = {};
+        let profiles = {};
 
-        // let userData = await this.storage.getUserDataByAadObjectIdAsync(aadObjectId);
-        // if (userData) {
-        //     for (let providerName in constants.IdentityProvider) {
-        //         let token = utils.getUserTokenFromUserData(userData, providerName);
-        //         let provider = this.authProviders[providerName];
-        //         if (token && provider) {
-        //             let profile = await provider.getProfileAsync(token.accessToken);
-        //             profiles[provider.displayName] = profile;
-        //         }
-        //     }
-        // }
+        // Get 29:xxx ID of the user
+        if (this.aadObjectIdToBotUserMap.has(aadObjectId)) {
+            const { userId, conversationId, serviceUrl } = this.aadObjectIdToBotUserMap.get(aadObjectId);
 
-        // return profiles;
+            let conversationRef: Partial<ConversationReference> = {
+                bot: { id: "28:" + config.get("bot.appId") } as ChannelAccount,
+                user: { id: userId } as ChannelAccount,
+                conversation: { id: conversationId } as ConversationAccount,
+                serviceUrl: serviceUrl,
+            };
 
-        return {};
-    }
+            await this.adapter.continueConversation(conversationRef, async (context: builder.TurnContext) => {
+                const tokenResponse = await this.adapter.getUserToken(context, "AzureADv2");
+                if (tokenResponse && tokenResponse.token) {
+                    const profile = await new AzureADv1Provider(null, null).getProfileAsync(tokenResponse.token);
+                    profiles["AzureADv2"] = profile;
+                }
+            });
+        } else {
+            // User was not found in the store
+        }
 
-    protected async handleTeamsSigninVerifyState(context: builder.TurnContext, query: builder.SigninStateVerificationQuery) {
-        await this.rootDialog.run(context, this.dialogState);
+        return profiles;
     }
 
     private async onTurnError(context: builder.TurnContext, error: Error) {

@@ -23,10 +23,25 @@
 
 import * as builder from "botbuilder";
 
-/** Replacable storage system. */
-export interface IBotExtendedStorage extends builder.Storage {
+export class UserMappingMiddleware {
 
-    /** Reads in user data from storage based on AAD object id. */
-    getUserDataByAadObjectIdAsync(aadObjectId: string): Promise<any>;
+    constructor(
+        private aadObjectIdToBotUserMap: Map<string, any>, 
+    )
+    { }
 
+    public async onTurn(context: builder.TurnContext, next) {
+        if (!context) {
+            throw new Error('Context is null');
+        };
+
+        const activity = context.activity;
+        if (activity.channelId === "msteams" && 
+            (activity.type === "conversationUpdate" || activity.type === "message" || activity.type === "invoke")) {
+            this.aadObjectIdToBotUserMap.set(activity.from.aadObjectId, 
+                { userId: activity.from.id, conversationId: activity.conversation.id, serviceUrl: activity.serviceUrl });
+        }
+
+        await next();
+    };
 }
