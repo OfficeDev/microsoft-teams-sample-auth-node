@@ -67,11 +67,18 @@ const adapter = new builder.BotFrameworkAdapter({
     appPassword: config.get("bot.appPassword"),
 });
 
-const identityProviderDialogs = [
-    new AzureADDialog("AzureADv2"),
-    new LinkedInDialog("LinkedIn"),
-    new GoogleDialog("Google"),
-];
+// Create dialogs and bot
+const identityProviderDialogs = [];
+
+function addDialog<TDialog>(TCreator: { new (connectionName: string): TDialog}, configurationName: string) {
+    if (config.has(configurationName) && config.get(configurationName)) {
+        identityProviderDialogs.push(new TCreator(config.get(configurationName)));
+    }
+}
+addDialog(AzureADDialog, "azureAD.connectionName");
+addDialog(LinkedInDialog, "linkedIn.connectionName");
+addDialog(GoogleDialog, "google.connectionName");
+
 let bot = new AuthBot(adapter, conversationState, userState, new RootDialog(identityProviderDialogs), identityProviderDialogs);
 
 // Configure bot routes

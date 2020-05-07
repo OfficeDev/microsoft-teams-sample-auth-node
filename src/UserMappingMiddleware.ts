@@ -23,6 +23,8 @@
 
 import * as builder from "botbuilder";
 
+// Simple middleware to save a mapping of AAD object ID -> Teams IDs (user ID, conversation ID, service URL)
+// This is a memory-based store for demonstration purposes only
 export class UserMappingMiddleware {
 
     constructor(

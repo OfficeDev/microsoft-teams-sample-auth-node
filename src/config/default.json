@@ -7,9 +7,14 @@
         "appId": "<app_id>",
         "appPassword": "<app_password>"
     },
+    "azureAD": {
+        "connectionName": ""
+    },
     "linkedIn": {
-        "clientId": "<client_id>",
-        "clientSecret": "<client_secret>"
+        "connectionName": ""
+    },
+    "google": {
+        "connectionName": ""
     },
     "storage": "memory",
     "features": {
