@@ -26,7 +26,7 @@ import * as builder from "botbuilder";
 import { RootDialog } from "./dialogs/RootDialog";
 import { UserMappingMiddleware } from "./UserMappingMiddleware";
 import { ConversationReference, ConversationAccount, ChannelAccount } from "botbuilder";
-import { AzureADv1Provider } from "./providers";
+import { IdentityProviderDialog } from "./dialogs/IdentityProviderDialog";
 
 // =========================================================
 // Auth Bot
@@ -42,6 +42,7 @@ export class AuthBot extends builder.TeamsActivityHandler {
         private conversationState: builder.ConversationState,
         private userState: builder.UserState,
         private rootDialog: RootDialog,
+        private identityProviderDialogs: IdentityProviderDialog[],
     )
     {
         super();
@@ -82,11 +83,11 @@ export class AuthBot extends builder.TeamsActivityHandler {
             };
 
             await this.adapter.continueConversation(conversationRef, async (context: builder.TurnContext) => {
-                const tokenResponse = await this.adapter.getUserToken(context, "AzureADv2");
-                if (tokenResponse && tokenResponse.token) {
-                    const profile = await new AzureADv1Provider(null, null).getProfileAsync(tokenResponse.token);
-                    profiles["AzureADv2"] = profile;
-                }
+                var tasks = this.identityProviderDialogs.map(async (dialog) => {
+                    var profile = await dialog.getProfileAsync(context);
+                    profiles[dialog.displayName] = profile;
+                });
+                await Promise.all(tasks);
             });
         } else {
             // User was not found in the store

@@ -38,7 +38,7 @@ export class LinkedInDialog extends IdentityProviderDialog {
 
     public get displayName() { return "LinkedIn"; }
 
-    public async getProfileAsync(accessToken: string): Promise<any> {
+    protected async getProfileFromProvider(accessToken: string): Promise<any> {
         let options = {
             url: `${apiBaseUrl}/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))`,
             json: true,
@@ -49,8 +49,8 @@ export class LinkedInDialog extends IdentityProviderDialog {
         return await request.get(options);
     }
 
-    protected async getProfileCardAsync(accessToken: string): Promise<builder.Attachment> {
-        let profile = await this.getProfileAsync(accessToken);
+    protected async getProfileCard(accessToken: string): Promise<builder.Attachment> {
+        let profile = await this.getProfileFromProvider(accessToken);
         return builder.CardFactory.thumbnailCard(
             `${this.getPreferredLocalizedString(profile.firstName)} ${this.getPreferredLocalizedString(profile.lastName)}`,
             [

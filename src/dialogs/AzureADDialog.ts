@@ -38,7 +38,7 @@ export class AzureADDialog extends IdentityProviderDialog {
 
     public get displayName() { return "Azure AD"; }
 
-    public async getProfileAsync(accessToken: string): Promise<any> {
+    protected async getProfileFromProvider(accessToken: string): Promise<any> {
         let options = {
             url: graphProfileUrl,
             json: true,
@@ -49,8 +49,8 @@ export class AzureADDialog extends IdentityProviderDialog {
         return await request.get(options);
     }
 
-    protected async getProfileCardAsync(accessToken: string): Promise<builder.Attachment> {
-        const profile = await this.getProfileAsync(accessToken);
+    protected async getProfileCard(accessToken: string): Promise<builder.Attachment> {
+        const profile = await this.getProfileFromProvider(accessToken);
         return builder.CardFactory.thumbnailCard(
             profile.displayName,
             `<b>E-mail</b>: ${profile.mail}<br/>

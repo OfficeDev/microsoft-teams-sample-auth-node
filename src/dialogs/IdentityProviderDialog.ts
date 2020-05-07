@@ -75,14 +75,24 @@ export abstract class IdentityProviderDialog extends dialogs.ComponentDialog {
 
     public abstract get displayName(): string;
 
-    public abstract async getProfileAsync(accessToken: string): Promise<any>;
+    public async getProfileAsync(context: builder.TurnContext): Promise<any> {
+        const adapter = context.adapter as builder.BotFrameworkAdapter;
+        const tokenResponse = await adapter.getUserToken(context, this.connectionName);
+        if (tokenResponse && tokenResponse.token) {
+            return await this.getProfileFromProvider(tokenResponse.token);
+        } else {
+            return null;
+        }
+    }
 
-    protected abstract async getProfileCardAsync(accessToken: string): Promise<builder.Attachment>;
+    protected abstract async getProfileFromProvider(accessToken: string): Promise<any>;
+
+    protected abstract async getProfileCard(accessToken: string): Promise<builder.Attachment>;
 
     protected async showProfileStep(stepContext: dialogs.WaterfallStepContext) {
         const tokenResponse: builder.TokenResponse = stepContext.result;
         if (tokenResponse) {
-            const card = await this.getProfileCardAsync(tokenResponse.token);
+            const card = await this.getProfileCard(tokenResponse.token);
             await stepContext.context.sendActivity({ 
                 text: `Here's your profile in ${this.displayName}`,
                 attachments: [ card ],

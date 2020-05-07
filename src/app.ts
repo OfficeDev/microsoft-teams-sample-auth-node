@@ -70,7 +70,7 @@ const identityProviderDialogs = [
     new AzureADDialog("AzureADv2"),
     new LinkedInDialog("LinkedIn"),
 ];
-let bot = new AuthBot(adapter, conversationState, userState, new RootDialog(identityProviderDialogs));
+let bot = new AuthBot(adapter, conversationState, userState, new RootDialog(identityProviderDialogs), identityProviderDialogs);
 
 // Configure bot routes
 app.post("/api/messages", (req, res) => {
