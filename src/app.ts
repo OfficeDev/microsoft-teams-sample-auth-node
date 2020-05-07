@@ -34,6 +34,8 @@ import * as apis from "./apis";
 import { AuthBot } from "./AuthBot";
 import { logger } from "./utils/index";
 import { RootDialog } from "./dialogs/RootDialog";
+import { AzureADDialog } from "./dialogs/AzureADDialog";
+import { LinkedInDialog } from "./dialogs/LinkedInDialog";
 
 let app = express();
 let appId = config.get("app.appId");
@@ -64,7 +66,11 @@ const adapter = new builder.BotFrameworkAdapter({
     appPassword: config.get("bot.appPassword"),
 });
 
-let bot = new AuthBot(adapter, conversationState, userState, new RootDialog());
+const identityProviderDialogs = [
+    new AzureADDialog("AzureADv2"),
+    new LinkedInDialog("LinkedIn"),
+];
+let bot = new AuthBot(adapter, conversationState, userState, new RootDialog(identityProviderDialogs));
 
 // Configure bot routes
 app.post("/api/messages", (req, res) => {

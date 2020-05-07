@@ -23,9 +23,7 @@
 
 import * as builder from "botbuilder";
 import * as dialogs from "botbuilder-dialogs";
-import { AzureADDialog, AZUREAD_DIALOG } from "./AzureADDialog";
-import { AzureADv1Provider, LinkedInProvider } from "../providers";
-import { LinkedInDialog, LINKEDIN_DIALOG } from "./LinkedInDialog";
+import { IdentityProviderDialog } from "./IdentityProviderDialog";
 
 const ROOT_DIALOG = "RootDialog";
 const CHOICE_PROMPT = "ChoicePrompt";
@@ -33,7 +31,9 @@ const MAIN_WATERFALL_DIALOG = "MainWaterfallDialog";
 
 export class RootDialog extends dialogs.ComponentDialog {
 
-    constructor() {
+    constructor(
+        private identityProviderDialogs: IdentityProviderDialog[]
+    ) {
         super(ROOT_DIALOG);
 
         this.addDialog(new dialogs.ChoicePrompt(CHOICE_PROMPT));
@@ -42,8 +42,7 @@ export class RootDialog extends dialogs.ComponentDialog {
             this.startAuthProviderDialogStep.bind(this),
             this.restartDialogStep.bind(this),
         ]));
-        this.addDialog(new AzureADDialog("AzureADv2", new AzureADv1Provider(null, null)));
-        this.addDialog(new LinkedInDialog("LinkedIn", new LinkedInProvider(null, null)));
+        this.identityProviderDialogs.forEach(dialog => this.addDialog(dialog));
 
         this.initialDialogId = MAIN_WATERFALL_DIALOG;
     }
@@ -66,22 +65,19 @@ export class RootDialog extends dialogs.ComponentDialog {
     private async chooseAuthProviderStep(step: dialogs.WaterfallStepContext) {
         return await step.prompt(CHOICE_PROMPT, {
             prompt: "Select an identity provider",
-            choices: dialogs.ChoiceFactory.toChoices(["Azure AD", "LinkedIn"])
+            choices: dialogs.ChoiceFactory.toChoices(this.identityProviderDialogs.map(dialog => dialog.displayName)),
         });
     }
 
     private async startAuthProviderDialogStep(step: dialogs.WaterfallStepContext) {
         const choice = step.result.value;
-        switch (choice) {
-            case "Azure AD":
-                return await step.beginDialog(AZUREAD_DIALOG);
 
-            case "LinkedIn":
-                return await step.beginDialog(LINKEDIN_DIALOG);
-
-            default:
-                await step.context.sendActivity(`"I didn't recognize your choice '${choice}'`);
-                return await step.replaceDialog(MAIN_WATERFALL_DIALOG);
+        const dialog = this.identityProviderDialogs.find(dialog => dialog.displayName === choice);
+        if (dialog) {
+            return await step.beginDialog(dialog.id);
+        } else {
+            await step.context.sendActivity(`"I didn't recognize your choice '${choice}'`);
+            return await step.replaceDialog(MAIN_WATERFALL_DIALOG);
         }
     }
 
