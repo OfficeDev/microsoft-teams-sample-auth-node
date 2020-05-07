@@ -23,9 +23,9 @@
 
 import * as builder from "botbuilder";
 import * as dialogs from "botbuilder-dialogs";
-import { IOAuth2Provider } from "../providers";
+import { LinkedInProvider } from "../providers";
 
-export const AZUREAD_DIALOG = "AzureADDialog";
+export const LINKEDIN_DIALOG = "LinkedInDialog";
 const CHOICE_PROMPT = "ChoicePrompt";
 const OAUTH_PROMPT = "OAuthPrompt";
 const MAIN_WATERFALL_DIALOG = "MainWaterfallDialog";
@@ -34,13 +34,13 @@ const SIGNIN_FLOW = "SigninFlow";
 const SIGNOUT_FLOW = "SignoutFlow";
 const MAINLOOP_FLOW = "MainLoopFlow";
 
-export class AzureADDialog extends dialogs.ComponentDialog {
+export class LinkedInDialog extends dialogs.ComponentDialog {
 
     constructor(
         private connectionName: string,
-        private provider: IOAuth2Provider)
+        private provider: LinkedInProvider)
     {
-        super(AZUREAD_DIALOG);
+        super(LINKEDIN_DIALOG);
 
         this.addDialog(new dialogs.OAuthPrompt(OAUTH_PROMPT, {
             connectionName,
@@ -82,15 +82,14 @@ export class AzureADDialog extends dialogs.ComponentDialog {
     private async showProfileStep(stepContext: dialogs.WaterfallStepContext) {
         const tokenResponse: builder.TokenResponse = stepContext.result;
         if (tokenResponse) {
-            const profile = await this.provider.getProfileAsync(tokenResponse.token);
+            let profile = await this.provider.getProfileAsync(tokenResponse.token);
             const card = builder.CardFactory.thumbnailCard(
-                profile.displayName,
-                `<b>E-mail</b>: ${profile.mail}<br/>
-                <b>Title</b>: ${profile.jobTitle}<br/>
-                <b>Office location</b>: ${profile.officeLocation}`,
-                [],
-                [],
-                { subtitle: profile.userPrincipalName });
+                `${this.getPreferredLocalizedString(profile.firstName)} ${this.getPreferredLocalizedString(profile.lastName)}`,
+                [
+                    { url: profile.profilePicture["displayImage~"].elements[0].identifiers[0].identifier }
+                ],
+                [
+                ]);
             await stepContext.context.sendActivity({ 
                 text: `Here's your profile in ${this.provider.displayName}`,
                 attachments: [ card ],
@@ -150,5 +149,10 @@ export class AzureADDialog extends dialogs.ComponentDialog {
 
     private restartMainLoopStep(stepContext: dialogs.WaterfallStepContext) {
         return stepContext.replaceDialog(MAINLOOP_FLOW);
+    }
+
+    private getPreferredLocalizedString(localizedString: any): string {
+        const preferredLocale = `${localizedString.preferredLocale.language}_${localizedString.preferredLocale.country}`;
+        return localizedString.localized[preferredLocale];
     }
 }

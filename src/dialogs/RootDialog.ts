@@ -24,7 +24,8 @@
 import * as builder from "botbuilder";
 import * as dialogs from "botbuilder-dialogs";
 import { AzureADDialog, AZUREAD_DIALOG } from "./AzureADDialog";
-import { AzureADv1Provider } from "../providers";
+import { AzureADv1Provider, LinkedInProvider } from "../providers";
+import { LinkedInDialog, LINKEDIN_DIALOG } from "./LinkedInDialog";
 
 const ROOT_DIALOG = "RootDialog";
 const CHOICE_PROMPT = "ChoicePrompt";
@@ -42,6 +43,7 @@ export class RootDialog extends dialogs.ComponentDialog {
             this.restartDialogStep.bind(this),
         ]));
         this.addDialog(new AzureADDialog("AzureADv2", new AzureADv1Provider(null, null)));
+        this.addDialog(new LinkedInDialog("LinkedIn", new LinkedInProvider(null, null)));
 
         this.initialDialogId = MAIN_WATERFALL_DIALOG;
     }
@@ -64,7 +66,7 @@ export class RootDialog extends dialogs.ComponentDialog {
     private async chooseAuthProviderStep(step: dialogs.WaterfallStepContext) {
         return await step.prompt(CHOICE_PROMPT, {
             prompt: "Select an identity provider",
-            choices: dialogs.ChoiceFactory.toChoices(["Azure AD"])
+            choices: dialogs.ChoiceFactory.toChoices(["Azure AD", "LinkedIn"])
         });
     }
 
@@ -72,8 +74,10 @@ export class RootDialog extends dialogs.ComponentDialog {
         const choice = step.result.value;
         switch (choice) {
             case "Azure AD":
-                await step.context.sendActivity("You chose Azure AD");
                 return await step.beginDialog(AZUREAD_DIALOG);
+
+            case "LinkedIn":
+                return await step.beginDialog(LINKEDIN_DIALOG);
 
             default:
                 await step.context.sendActivity(`"I didn't recognize your choice '${choice}'`);

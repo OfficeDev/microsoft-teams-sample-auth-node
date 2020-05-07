@@ -37,7 +37,7 @@ export type ProfileField = "id" |
     "summary" | "specialties" | "positions" |
     "picture-url" | "public-profile-url";
 
-const apiBaseUrl = "https://api.linkedin.com/v1";
+const apiBaseUrl = "https://api.linkedin.com/v2";
 const authorizationUrl = "https://www.linkedin.com/oauth/v2/authorization";
 const accessTokenUrl = "https://www.linkedin.com/oauth/v2/accessToken";
 const callbackPath = "/auth/linkedIn/callback";
@@ -89,14 +89,9 @@ export class LinkedInProvider implements IOAuth2Provider {
         };
     }
 
-    public async getProfileAsync(accessToken: string, fields?: ProfileField[]): Promise<any> {
-        let fieldsString = "";
-        if (fields && fields.length) {
-            fieldsString = `:(${fields.join(",")})`;
-        }
-
-        let options = {
-            url: `${apiBaseUrl}/people/~${fieldsString}?format=json`,
+    public async getProfileAsync(accessToken: string, _fields?: ProfileField[]): Promise<any> {
+       let options = {
+            url: `${apiBaseUrl}/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))`,
             json: true,
             headers: {
                 "Authorization": `Bearer ${accessToken}`,
