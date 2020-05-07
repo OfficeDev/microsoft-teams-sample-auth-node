@@ -46,15 +46,20 @@ export class LinkedInDialog extends IdentityProviderDialog {
                 "Authorization": `Bearer ${accessToken}`,
             },
         };
-        return await request.get(options);
+        const profile = await request.get(options);
+        return {
+            localizedFirstName: this.getPreferredLocalizedString(profile.firstName),
+            localizedLastName: this.getPreferredLocalizedString(profile.lastName),
+            profilePictureUrl: profile.profilePicture["displayImage~"].elements[0].identifiers[0].identifier,
+        }
     }
 
     protected async getProfileCard(accessToken: string): Promise<builder.Attachment> {
         let profile = await this.getProfileFromProvider(accessToken);
         return builder.CardFactory.thumbnailCard(
-            `${this.getPreferredLocalizedString(profile.firstName)} ${this.getPreferredLocalizedString(profile.lastName)}`,
+            `${profile.localizedFirstName} ${profile.localizedLastName}`,
             [
-                { url: profile.profilePicture["displayImage~"].elements[0].identifiers[0].identifier }
+                { url: profile.profilePictureUrl }
             ],
             [
             ]);

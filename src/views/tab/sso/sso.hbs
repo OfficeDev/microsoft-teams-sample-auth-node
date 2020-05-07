@@ -213,10 +213,11 @@
                     let profilesDiv = $("#divBotProfiles");
                     profilesDiv.empty();
 
-                    if (Object.keys(profiles).length === 0) {
-                        profilesDiv.text("No accounts linked");
+                    let profileNames = Object.keys(profiles).sort();
+                    if (profileNames.length === 0) {
+                        profilesDiv.text("No linked accounts.");
                     } else {
-                        for (let profileName in profiles) {
+                        for (let profileName in profileNames) {
                             profilesDiv.append($("<h3>").text(profileName));
 
                             let profile = profiles[profileName];
