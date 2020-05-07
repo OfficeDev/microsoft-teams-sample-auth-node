@@ -21,28 +21,32 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import * as request from "request-promise";
 import * as builder from "botbuilder";
-import { IOAuth2Provider, LinkedInProvider } from "../providers";
 import { IdentityProviderDialog } from "./IdentityProviderDialog";
 
 export const LINKEDIN_DIALOG = "LinkedInDialog";
+const apiBaseUrl = "https://api.linkedin.com/v2";
 
 export class LinkedInDialog extends IdentityProviderDialog {
-
-    private provider: IOAuth2Provider;
 
     constructor(
         connectionName: string)
     {
         super(LINKEDIN_DIALOG, connectionName);
-
-        this.provider = new LinkedInProvider(null, null);
     }
 
     public get displayName() { return "LinkedIn"; }
 
     public async getProfileAsync(accessToken: string): Promise<any> {
-        return await this.provider.getProfileAsync(accessToken);
+        let options = {
+            url: `${apiBaseUrl}/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))`,
+            json: true,
+            headers: {
+                "Authorization": `Bearer ${accessToken}`,
+            },
+        };
+        return await request.get(options);
     }
 
     protected async getProfileCardAsync(accessToken: string): Promise<builder.Attachment> {

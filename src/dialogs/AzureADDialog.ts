@@ -21,28 +21,32 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import * as request from "request-promise";
 import * as builder from "botbuilder";
-import { IOAuth2Provider, AzureADv1Provider } from "../providers";
 import { IdentityProviderDialog } from "./IdentityProviderDialog";
 
 export const AZUREAD_DIALOG = "AzureADDialog";
+const graphProfileUrl = "https://graph.microsoft.com/v1.0/me";
 
 export class AzureADDialog extends IdentityProviderDialog {
-
-    private provider: IOAuth2Provider;
 
     constructor(
         connectionName: string)
     {
         super(AZUREAD_DIALOG, connectionName);
-
-        this.provider = new AzureADv1Provider(null, null);
     }
 
     public get displayName() { return "Azure AD"; }
 
     public async getProfileAsync(accessToken: string): Promise<any> {
-        return await this.provider.getProfileAsync(accessToken);
+        let options = {
+            url: graphProfileUrl,
+            json: true,
+            headers: {
+                "Authorization": `Bearer ${accessToken}`,
+            },
+        };
+        return await request.get(options);
     }
 
     protected async getProfileCardAsync(accessToken: string): Promise<builder.Attachment> {
