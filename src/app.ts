@@ -36,6 +36,7 @@ import { logger } from "./utils/index";
 import { RootDialog } from "./dialogs/RootDialog";
 import { AzureADDialog } from "./dialogs/AzureADDialog";
 import { LinkedInDialog } from "./dialogs/LinkedInDialog";
+import { GoogleDialog } from "./dialogs/GoogleDialog";
 
 let app = express();
 let appId = config.get("app.appId");
@@ -69,6 +70,7 @@ const adapter = new builder.BotFrameworkAdapter({
 const identityProviderDialogs = [
     new AzureADDialog("AzureADv2"),
     new LinkedInDialog("LinkedIn"),
+    new GoogleDialog("Google"),
 ];
 let bot = new AuthBot(adapter, conversationState, userState, new RootDialog(identityProviderDialogs), identityProviderDialogs);
 
