@@ -23,6 +23,8 @@
 
 import * as builder from "botbuilder";
 import * as dialogs from "botbuilder-dialogs";
+import { AzureADDialog, AZUREAD_DIALOG } from "./AzureADDialog";
+import { AzureADv1Provider } from "../providers";
 
 const ROOT_DIALOG = "RootDialog";
 const CHOICE_PROMPT = "ChoicePrompt";
@@ -35,9 +37,11 @@ export class RootDialog extends dialogs.ComponentDialog {
 
         this.addDialog(new dialogs.ChoicePrompt(CHOICE_PROMPT));
         this.addDialog(new dialogs.WaterfallDialog(MAIN_WATERFALL_DIALOG, [
-            this.chooseAuthProvider.bind(this),
-            this.startAuthProviderDialog.bind(this),
+            this.chooseAuthProviderStep.bind(this),
+            this.startAuthProviderDialogStep.bind(this),
+            this.restartDialogStep.bind(this),
         ]));
+        this.addDialog(new AzureADDialog("AzureADv2", new AzureADv1Provider(null, null)));
 
         this.initialDialogId = MAIN_WATERFALL_DIALOG;
     }
@@ -57,25 +61,27 @@ export class RootDialog extends dialogs.ComponentDialog {
         }
     }
 
-    private async chooseAuthProvider(step: dialogs.WaterfallStepContext) {
+    private async chooseAuthProviderStep(step: dialogs.WaterfallStepContext) {
         return await step.prompt(CHOICE_PROMPT, {
             prompt: "Select an identity provider",
             choices: dialogs.ChoiceFactory.toChoices(["Azure AD"])
         });
     }
 
-    private async startAuthProviderDialog(step: dialogs.WaterfallStepContext) {
+    private async startAuthProviderDialogStep(step: dialogs.WaterfallStepContext) {
         const choice = step.result.value;
         switch (choice) {
             case "Azure AD":
                 await step.context.sendActivity("You chose Azure AD");
-                return await step.endDialog();
-                break;
+                return await step.beginDialog(AZUREAD_DIALOG);
 
             default:
                 await step.context.sendActivity(`"I didn't recognize your choice '${choice}'`);
-                return await step.endDialog();
-                break;
+                return await step.replaceDialog(MAIN_WATERFALL_DIALOG);
         }
+    }
+
+    private restartDialogStep(stepContext: dialogs.WaterfallStepContext) {
+        return stepContext.replaceDialog(MAIN_WATERFALL_DIALOG);
     }
 }

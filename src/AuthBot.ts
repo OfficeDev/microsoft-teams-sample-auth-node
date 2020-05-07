@@ -79,6 +79,10 @@ export class AuthBot extends builder.TeamsActivityHandler {
         return {};
     }
 
+    protected async handleTeamsSigninVerifyState(context: builder.TurnContext, query: builder.SigninStateVerificationQuery) {
+        await this.rootDialog.run(context, this.dialogState);
+    }
+
     private async onTurnError(context: builder.TurnContext, error: Error) {
             // This check writes out errors to console log .vs. app insights.
             // NOTE: In production environment, you should consider logging this to Azure
