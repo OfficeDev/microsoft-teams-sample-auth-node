@@ -11,14 +11,6 @@
         "clientId": "<client_id>",
         "clientSecret": "<client_secret>"
     },
-    "azureAD": {
-        "appId": "<app_id>",
-        "appPassword": "<app_password>"
-    },
-    "google": {
-        "clientId": "<client_id>",
-        "clientSecret": "<client_secret>"
-    },
     "storage": "memory",
     "features": {
     }
