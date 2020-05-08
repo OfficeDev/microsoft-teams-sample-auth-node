@@ -36,12 +36,12 @@ export abstract class IdentityProviderDialog extends dialogs.ComponentDialog {
 
     constructor(
         dialogId: string,
-        private connectionName: string)
+        private _connectionName: string)
     {
         super(dialogId);
 
         this.addDialog(new dialogs.OAuthPrompt(OAUTH_PROMPT, {
-            connectionName,
+            connectionName: this.connectionName,
             text: "Please sign in so I can show you your profile.",
             title: "Sign in",
             timeout: 300000
@@ -75,7 +75,9 @@ export abstract class IdentityProviderDialog extends dialogs.ComponentDialog {
 
     public abstract get displayName(): string;
 
-    public async getProfileAsync(context: builder.TurnContext): Promise<any> {
+    public get connectionName() { return this._connectionName };
+
+    public async getProfile(context: builder.TurnContext): Promise<any> {
         const adapter = context.adapter as builder.BotFrameworkAdapter;
         const tokenResponse = await adapter.getUserToken(context, this.connectionName);
         if (tokenResponse && tokenResponse.token) {
@@ -85,9 +87,9 @@ export abstract class IdentityProviderDialog extends dialogs.ComponentDialog {
         }
     }
 
-    protected abstract async getProfileFromProvider(accessToken: string): Promise<any>;
+    public abstract async getProfileCard(accessToken: string): Promise<builder.Attachment>;
 
-    protected abstract async getProfileCard(accessToken: string): Promise<builder.Attachment>;
+    protected abstract async getProfileFromProvider(accessToken: string): Promise<any>;
 
     protected async showProfileStep(stepContext: dialogs.WaterfallStepContext) {
         const tokenResponse: builder.TokenResponse = stepContext.result;

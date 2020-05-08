@@ -25,7 +25,7 @@ import * as config from "config";
 import * as builder from "botbuilder";
 import { RootDialog } from "./dialogs/RootDialog";
 import { UserMappingMiddleware } from "./UserMappingMiddleware";
-import { ConversationReference, ConversationAccount, ChannelAccount } from "botbuilder";
+import { ConversationReference, ConversationAccount, ChannelAccount, ActionTypes, AttachmentLayoutTypes } from "botbuilder";
 import { IdentityProviderDialog } from "./dialogs/IdentityProviderDialog";
 
 // =========================================================
@@ -84,7 +84,7 @@ export class AuthBot extends builder.TeamsActivityHandler {
 
             await this.adapter.continueConversation(conversationRef, async (context: builder.TurnContext) => {
                 var tasks = this.identityProviderDialogs.map(async (dialog) => {
-                    var profile = await dialog.getProfileAsync(context);
+                    var profile = await dialog.getProfile(context);
                     profiles[dialog.displayName] = profile;
                 });
                 await Promise.all(tasks);
@@ -98,6 +98,39 @@ export class AuthBot extends builder.TeamsActivityHandler {
 
     protected async handleTeamsSigninVerifyState(context, state) {
         await this.rootDialog.run(context, this.dialogState);
+    }
+
+    protected async handleTeamsMessagingExtensionQuery(context: builder.TurnContext, query: builder.MessagingExtensionQuery): Promise<builder.MessagingExtensionResponse> {
+        const adapter = context.adapter as builder.BotFrameworkAdapter;
+        const dialog = this.identityProviderDialogs[0];
+
+        // Get the user token, redeeming the incoming state value if needed
+        let tokenResponse = await adapter.getUserToken(context, dialog.connectionName, query.state);
+        
+        if (tokenResponse && tokenResponse.token) {
+            // We have a token, get the card and return it as the result
+            let card = await dialog.getProfileCard(tokenResponse.token);
+            return {
+                composeExtension: {
+                    type: "result",
+                    attachmentLayout: AttachmentLayoutTypes.List,
+                    attachments: [ card ],
+                },
+            };
+        } else {
+            // Prompt the user to authenticate
+            const signinLink = await adapter.getSignInLink(context, dialog.connectionName);
+            return {
+                composeExtension: {
+                    type: "auth",
+                    suggestedActions: {
+                        actions: [
+                            { type: ActionTypes.OpenUrl, title: "Sign in", value: signinLink },
+                        ],
+                    },
+                },
+            };
+        }
     }
     
     private async onTurnError(context: builder.TurnContext, error: Error) {

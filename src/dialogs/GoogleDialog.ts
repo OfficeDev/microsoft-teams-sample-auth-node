@@ -38,6 +38,18 @@ export class GoogleDialog extends IdentityProviderDialog {
 
     public get displayName() { return "Google"; }
 
+    public async getProfileCard(accessToken: string): Promise<builder.Attachment> {
+        const profile = await this.getProfileFromProvider(accessToken);
+        return builder.CardFactory.thumbnailCard(
+            profile.name.displayName,
+            [
+                { url: profile.photo.url }
+            ],
+            [
+            ],
+            { subtitle: profile.email.value });
+    }
+
     protected async getProfileFromProvider(accessToken: string): Promise<any> {
         let options = {
             url: `${meProfileUrl}?personFields=names,emailAddresses,photos,urls`,
@@ -52,18 +64,6 @@ export class GoogleDialog extends IdentityProviderDialog {
             email: this.findPrimaryValue(profile.emailAddresses),
             photo: this.findPrimaryValue(profile.photos),
         };
-    }
-
-    protected async getProfileCard(accessToken: string): Promise<builder.Attachment> {
-        const profile = await this.getProfileFromProvider(accessToken);
-        return builder.CardFactory.thumbnailCard(
-            profile.name.displayName,
-            [
-                { url: profile.photo.url }
-            ],
-            [
-            ],
-            { subtitle: profile.email.value });
     }
 
     private findPrimaryValue(values: any[]): any {

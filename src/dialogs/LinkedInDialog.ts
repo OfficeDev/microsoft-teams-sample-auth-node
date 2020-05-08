@@ -38,6 +38,17 @@ export class LinkedInDialog extends IdentityProviderDialog {
 
     public get displayName() { return "LinkedIn"; }
 
+    public async getProfileCard(accessToken: string): Promise<builder.Attachment> {
+        let profile = await this.getProfileFromProvider(accessToken);
+        return builder.CardFactory.thumbnailCard(
+            `${profile.localizedFirstName} ${profile.localizedLastName}`,
+            [
+                { url: profile.profilePictureUrl }
+            ],
+            [
+            ]);
+    }
+
     protected async getProfileFromProvider(accessToken: string): Promise<any> {
         let options = {
             url: `${apiBaseUrl}/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))`,
@@ -52,17 +63,6 @@ export class LinkedInDialog extends IdentityProviderDialog {
             localizedLastName: this.getPreferredLocalizedString(profile.lastName),
             profilePictureUrl: profile.profilePicture["displayImage~"].elements[0].identifiers[0].identifier,
         }
-    }
-
-    protected async getProfileCard(accessToken: string): Promise<builder.Attachment> {
-        let profile = await this.getProfileFromProvider(accessToken);
-        return builder.CardFactory.thumbnailCard(
-            `${profile.localizedFirstName} ${profile.localizedLastName}`,
-            [
-                { url: profile.profilePictureUrl }
-            ],
-            [
-            ]);
     }
 
     private getPreferredLocalizedString(localizedString: any): string {
