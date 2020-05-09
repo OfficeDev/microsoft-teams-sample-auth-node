@@ -59,6 +59,29 @@
       ]
     }
   ],
+  "composeExtensions": [
+    {
+      "botId": "<<REGISTERED_BOT_ID>>",
+      "canUpdateConfiguration": true,
+      "commands": [
+        {
+          "id": "getProfileCard",
+          "title": "Get profile card",
+          "description": "Get profile card",
+          "initialRun": true,
+          "type" : "query",
+          "context" : ["compose", "commandBox"],
+          "parameters": [
+            {
+              "name": "keyword",
+              "title": "Search keywords",
+              "description": "Enter the keywords to search for"
+            }
+          ]
+        }
+      ]
+    }
+  ],
   "permissions": [
     "messageTeamMembers",
     "identity"
