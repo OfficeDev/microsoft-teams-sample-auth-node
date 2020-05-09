@@ -98,6 +98,7 @@ app.get("/tab/silent", (req, res) => { res.render("tab/silent/silent"); });
 app.get("/tab/silent-start", (req, res) => { res.render("tab/silent/silent-start"); });
 app.get("/tab/silent-end", (req, res) => { res.render("tab/silent/silent-end"); });
 app.get("/tab/sso", (req, res) => { res.render("tab/sso/sso"); });
+app.get("/messaging-extension/settings", (req, res) => { res.render("messaging-extension-settings"); });
 
 let openIdMetadataV1 = new apis.OpenIdMetadata("https://login.microsoftonline.com/common/.well-known/openid-configuration");
 let openIdMetadataV2 = new apis.OpenIdMetadata("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration");

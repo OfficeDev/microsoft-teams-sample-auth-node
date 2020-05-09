@@ -101,11 +101,11 @@ export class AuthBot extends builder.TeamsActivityHandler {
     }
 
     protected async handleTeamsMessagingExtensionQuery(context: builder.TurnContext, query: builder.MessagingExtensionQuery): Promise<builder.MessagingExtensionResponse> {
-        const adapter = context.adapter as builder.BotFrameworkAdapter;
+        // Return the profile from the first configured dialog
         const dialog = this.identityProviderDialogs[0];
 
         // Get the user token, redeeming the incoming state value if needed
-        let tokenResponse = await adapter.getUserToken(context, dialog.connectionName, query.state);
+        let tokenResponse = await this.adapter.getUserToken(context, dialog.connectionName, query.state);
         
         if (tokenResponse && tokenResponse.token) {
             // We have a token, get the card and return it as the result
@@ -119,7 +119,7 @@ export class AuthBot extends builder.TeamsActivityHandler {
             };
         } else {
             // Prompt the user to authenticate
-            const signinLink = await adapter.getSignInLink(context, dialog.connectionName);
+            const signinLink = await this.adapter.getSignInLink(context, dialog.connectionName);
             return {
                 composeExtension: {
                     type: "auth",
@@ -132,6 +132,35 @@ export class AuthBot extends builder.TeamsActivityHandler {
             };
         }
     }
+
+    protected async handleTeamsMessagingExtensionConfigurationQuerySettingUrl(context: builder.TurnContext, query: builder.MessagingExtensionQuery): Promise<builder.MessagingExtensionResponse> {
+        const baseUri = config.get("app.baseUri");
+        return {
+            composeExtension: {
+                type: 'config',
+                suggestedActions: {
+                    actions: [
+                        {
+                            type: ActionTypes.OpenUrl,
+                            value: `${baseUri}/messaging-extension/settings`,
+                            title: "Settings"
+                        }
+                    ]
+                }
+            }
+        };
+    }
+
+    protected async handleTeamsMessagingExtensionConfigurationSetting(context: builder.TurnContext, settings: any): Promise<void> {
+        const payload = JSON.parse(settings.state)
+        if (payload.command === "SignOut") {
+            var signOutTasks = this.identityProviderDialogs.map((dialog) => {
+                this.adapter.signOutUser(context, dialog.connectionName);
+            });
+            await Promise.all(signOutTasks);
+        }
+    }
+
     
     private async onTurnError(context: builder.TurnContext, error: Error) {
         // This check writes out errors to console log .vs. app insights.
