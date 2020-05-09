@@ -23,12 +23,14 @@ There is a version of this app running on Microsoft Azure that you can try yours
 
 ## Getting started
 
-Start by following the setup instructions in the [Microsoft Teams Sample (Node.JS)](https://github.com/OfficeDev/microsoft-teams-sample-complete-node), under [Steps to see the full app in Microsoft Teams](https://github.com/OfficeDev/microsoft-teams-sample-complete-node#steps-to-see-the-full-app-in-microsoft-teams), applying it to the code in this sample. The instructions in that project walk you through the following steps:
+Follow the setup instructions in the [Microsoft Teams Sample (Node.JS)](https://github.com/OfficeDev/microsoft-teams-sample-complete-node), under [Steps to see the full app in Microsoft Teams](https://github.com/OfficeDev/microsoft-teams-sample-complete-node#steps-to-see-the-full-app-in-microsoft-teams), applying it to the code in this sample. The instructions in that project walk you through the following steps:
 
 1. Set up a tunneling service such as [ngrok](https://ngrok.com/).
-1. Register a bot in [Microsoft Bot Framework](https://dev.botframework.com/).
+1. Register the bot with Azure Bot Service, following the instructions [here](https://docs.microsoft.com/en-us/azure/bot-service/bot-service-quickstart-registration?view=azure-bot-service-3.0).
 1. Configure the app so it runs as the registered bot.
 1. Create an app manifest (follow the "Manual" instructions) and sideload the app into Microsoft Teams.
+
+> **IMPORTANT**:  Do not use the legacy Bot Framework portal, nor App Studio, to create the bot. Your bot MUST be registered with Azure Bot Service to use the authentication functionality provided by Azure Bot Service.
 
 ## Setup
 
@@ -51,7 +53,6 @@ Registering a bot with the Microsoft Bot Framework automatically creates a corre
 1. Find your application in the list and click on the name to edit.
 1. Navigate to **Authentication** under **Manage** and add the following redirect URLs:
 
-    - `https://<your_ngrok_url>/auth/azureADv1/callback`
     - `https://<your_ngrok_url>/tab/simple-end`
     - `https://<your_ngrok_url>/tab/silent-end`
     - `https://token.botframework.com/.auth/web/redirect`
@@ -73,8 +74,8 @@ Registering a bot with the Microsoft Bot Framework automatically creates a corre
 1. In the **Authorized client applications** section, you identify the applications that you want to authorize to your app’s web application. Each of the following IDs needs to be entered:
     - `1fec8e78-bce4-4aaf-ab1b-5451cc387264` (Teams mobile/desktop application)
     - `5e3ce6c0-2b1f-4285-8d4b-75ee78787346` (Teams web application)
-1. Navigate to **API Permissions**, and make sure to add the follow permissions:
-    - User.Read (enabled by default)
+1. Navigate to **API Permissions**, and make sure to add the following permissions:
+    - User.Read
     - email
     - offline_access
     - openid
@@ -83,7 +84,7 @@ Registering a bot with the Microsoft Bot Framework automatically creates a corre
 
 1. The bot uses `MICROSOFT_APP_ID` and `MICROSOFT_APP_PASSWORD`, so these should already be set.
 
-#### Update your Microsoft Teams application manifest
+### Update your Microsoft Teams application manifest
 
 1. Add new properties to your Microsoft Teams manifest:
 
@@ -102,7 +103,6 @@ Registering a bot with the Microsoft Bot Framework automatically creates a corre
 
     ```json
     "permissions": [
-        "messageTeamMembers",
         "identity"
     ],
     "validDomains": [
@@ -111,45 +111,76 @@ Registering a bot with the Microsoft Bot Framework automatically creates a corre
     ],
     ```
 
-### Using LinkedIn
+### Add the Azure AD OAuth connection to the bot
 
-1. Follow the instructions in [Step 1 — Configuring your LinkedIn application](https://developer.linkedin.com/docs/oauth2) to create and configure a LinkedIn application for OAuth 2.
-1. In "Authorized Redirect URLs", add `https://<your_ngrok_url>/auth/linkedIn/callback`.
+1. Navigate to your bot's Bot Channels Registration page on the [Azure Portal](https://ms.portal.azure.com/#blade/HubsExtension/BrowseResourceBlade/resourceType/Microsoft.BotService%2FbotServices).
+1. Click **Settings**.
+1. Under **OAuth Connection Settings** near the bottom of the page, click **Add Setting**.
+1. Fill in the form as follows:
+
+    1. For **Name**, enter a name for your connection (e.g., "AzureADv2")
+    1. For **Service Provider**, select **Azure Active Directory v2**. Once you select this, the Azure AD-specific fields will be displayed.
+    1. For **Client id**, enter your bot's client ID.
+    1. For **Client secret**, enter your bot's client secret.
+    1. For **Tenant ID**, enter `common`.
+    1. For **Scopes**, enter `User.Read`.
+
+1. Click **Save**.
+1. Set the environment variable `AZUREAD_CONNECTIONNAME` to the name that you chose for this OAuth connection.
+
+### [Optional] Using LinkedIn
+
+1. Follow the instructions [here](https://docs.microsoft.com/en-us/linkedin/shared/authentication/authorization-code-flow?context=linkedin/context#step-1-configure-your-application) to create and configure a LinkedIn application for OAuth 2.
+1. In "Authorized Redirect URLs", add `https://token.botframework.com/.auth/web/redirect`.
 1. Note your app's "Client ID" and "Client Secret".
-1. Set the environment variables (or equivalent config) `LINKEDIN_CLIENT_ID` = `<your_client_id>`, and `LINKEDIN_CLIENT_SECRET` = `<your_client_secret>`.
+1. Navigate to your bot's Bot Channels Registration page on the [Azure Portal](https://ms.portal.azure.com/#blade/HubsExtension/BrowseResourceBlade/resourceType/Microsoft.BotService%2FbotServices).
+1. Click **Settings**.
+1. Under **OAuth Connection Settings** near the bottom of the page, click **Add Setting**.
+1. Fill in the form as follows:
 
-### Using Google
+    1. For **Name**, enter a name for your connection (e.g., "LinkedIn")
+    1. For **Service Provider**, select **LinkedIn**.
+    1. For **Client id**, enter the client ID for your LinkedIn app.
+    1. For **Client secret**, enter the client secret for your LinkedIn app.
+    1. For **Scopes**, enter `r_liteprofile r_emailaddress`.
+
+1. Click **Save**.
+1. Set the environment variable `LINKEDIN_CONNECTIONNAME` to the name that you chose for this OAuth connection.
+
+
+### [Optional] Using Google
 
 1. Obtain OAuth2 client credentials from the [Google API Console](https://console.developers.google.com). Enable access to the [Google People API](https://developers.google.com/people/).
-1. In "Authorized redirect URLs", add `https://<your_ngrok_url>/auth/google/callback`.
+1. In "Authorized redirect URLs", add `https://token.botframework.com/.auth/web/redirect`.
 1. Note your app's "Client ID" and "Client Secret".
-1. Set the environment variables (or equivalent config) `GOOGLE_CLIENT_ID` = `<your_client_id>`, and `GOOGLE_CLIENT_SECRET` = `<your_client_secret>`.
+1. Navigate to your bot's Bot Channels Registration page on the [Azure Portal](https://ms.portal.azure.com/#blade/HubsExtension/BrowseResourceBlade/resourceType/Microsoft.BotService%2FbotServices).
+1. Click **Settings**.
+1. Under **OAuth Connection Settings** near the bottom of the page, click **Add Setting**.
+1. Fill in the form as follows:
 
-## Bot authentication flow
+    1. For **Name**, enter a name for your connection (e.g., "Google")
+    1. For **Service Provider**, select **Google**.
+    1. For **Client id**, enter the client ID for your Google app.
+    1. For **Client secret**, enter the client secret for your Google app.
+    1. For **Scopes**, enter `openid profile email`.
 
-The Azure Bot Service v4 SDK facilitates the development of bots that can access online resources that require authentication. Your bot does not need to manage authentication tokens. Azure does it for you using OAuth2 to generate a token, based on each user's credentials. Your bot uses the token generated by Azure to access those resources. In this way, the user does not have to provide ID and password to the bot to access a secured resource but only to a trusted identity provider.
+1. Click **Save**.
+1. Set the environment variable `GOOGLE_CONNECTIONNAME` to the name that you chose for this OAuth connection.
 
-For an overview of how the Bot Framework handles authentication, see [Bot authentication](https://docs.microsoft.com/en-us/azure/bot-service/bot-builder-concept-authentication?view=azure-bot-service-4.0).
+### Testing the OAuth connections
 
-For the bot authentication to work you will need:
-
-1. An Azure Active Directory (AD) application to register a bot resource in Azure. This application allows the bot to access an external secured resource, such as Microsoft Graph. It also allows the user to communicate with the bot via several channels such as Web Chat.
-2. A separate Azure AD application that functions as the identity provider. This application provides the credentials needed to establish an OAuth connection between the bot and the secured resource. Notice that this article uses Active Directory as an identity provider. Many other providers are also supported.
-
-Follow the documentation [here](https://docs.microsoft.com/en-us/azure/bot-service/bot-builder-authentication?view=azure-bot-service-4.0&tabs=aadv2%2Cjavascript#create-the-azure-bot-application) to:
-
-1. [Create the Azure bot application](https://docs.microsoft.com/en-us/azure/bot-service/bot-builder-authentication?view=azure-bot-service-4.0&tabs=aadv2%2Cjavascript#create-the-azure-bot-application)
-1. [Create the Azure AD identity application](https://docs.microsoft.com/en-us/azure/bot-service/bot-builder-authentication?view=azure-bot-service-4.0&tabs=aadv2%2Cjavascript#create-the-azure-ad-identity-application) - You don't need to do this step. We will reuse the same applicationId we created earlier in the [Using Azure AD](#using-azure-ad) section
-1. [Register the Azure AD OAuth application with the bot](https://docs.microsoft.com/en-us/azure/bot-service/bot-builder-authentication?view=azure-bot-service-4.0&tabs=aadv2%2Cjavascript#tabpanel_CeZOj-G++Q_aadv2)
-1. Set the appropriate environment variables `LINKEDIN_CONNECTIONNAME`, `GOOGLE_CONNECTIONNAME` and/or `AZUREAD_CONNECTIONNAME` to `<oauth_connection_name>`. (The same name(s) that you set in the **OAuth Connection Settings** for the bot channel registration in the previous step.)
-
-### Testing the connection
+Before proceeding, it's wise to test the OAuth connections that you have configured with the Azure Bot Service.
 
 1. Open the [Bot Channel Registrations](https://ms.portal.azure.com/#blade/HubsExtension/BrowseResourceBlade/resourceType/Microsoft.BotService%2FbotServices) blade on the Azure Portal
-1. Navigate to your bot channel registration resource
-1. Click on **Test in Web Chat**. If the connection is successful you should be able to see a chat window. This is essentially a Bot Emulator window. You can even test the bot here if its configured and running.
+1. Navigate to your Bot Channel Registration resource.
+1. Click **Settings**.
+1. Under **OAuth Connection Settings** near the bottom of the page, click on the connection.
+1. Click on **Test connection**.
+1. Sign in and authorize your app when prompted.
 
-### Security notes
+If the connection was configured correctly, you will be taken to a page with the access token that your bot would have received.
+
+## Security notes
 
 -   The verification code mechanism prevents a potential ["man in the middle" attack](https://hueniverse.com/explaining-the-oauth-session-fixation-attack-aa759250a0e7) by requiring evidence that the user who authorized the bot in the browser is the same person as the user who is chatting with the bot. **Don't** remove the need for a verification code without understanding what it is protecting against, and weighing the risk against your use case and threat model.
 -   Don't use the `signin/verifyState` message to pass sensitive data (e.g., access tokens) directly to your bot in plaintext. The `state` value should not be usable without additional information that's available only to your bot.
@@ -157,6 +188,6 @@ Follow the documentation [here](https://docs.microsoft.com/en-us/azure/bot-servi
 -   Store your users’ access tokens in such a way that they are encrypted at rest, especially if you are also storing refresh tokens. Consider, based on your use case and threat model, how often to rotate the encryption key. (The sample uses an in-memory store for simplicity; do not do this in your production app!)
 -   If you are using OAuth, remember that the `state` parameter in the authentication request must contain a unique session token to prevent request forgery attacks. The sample uses a randomly-generated GUID.
 
-### Mobile clients
+## Mobile clients
 
 As of April 2019, Microsoft Teams mobile clients support the `signin` action protocol (that is, mobile clients work the same way as the desktop/web clients). It does require an updated version of the [Microsoft Teams JavaScript library](https://www.npmjs.com/package/@microsoft/teams-js) (1.4.1 or later). The way it used to work is described [here](fallbackUrl.md).
