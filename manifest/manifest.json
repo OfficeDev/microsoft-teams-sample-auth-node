@@ -7,8 +7,8 @@
   "developer": {
     "name": "Your Name Here",
     "websiteUrl": "https://www.example.com",
-    "privacyUrl": "https://privacy.microsoft.com/PrivacyStatement",
-    "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement/"
+    "privacyUrl": "https://www.example.com/PrivacyStatement",
+    "termsOfUseUrl": "https://www.example.com/TermsOfUse"
   },
   "name": {
     "short": "Teams AuthBot"
