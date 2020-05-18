@@ -74,7 +74,7 @@ Registering a bot with the Microsoft Bot Framework automatically creates a corre
 1. In the **Authorized client applications** section, you identify the applications that you want to authorize to your app’s web application. Each of the following IDs needs to be entered:
     - `1fec8e78-bce4-4aaf-ab1b-5451cc387264` (Teams mobile/desktop application)
     - `5e3ce6c0-2b1f-4285-8d4b-75ee78787346` (Teams web application)
-1. Navigate to **API Permissions**, and make sure to add the following permissions:
+1. Navigate to **API Permissions**, and make sure to add the following delegated permissions:
     - User.Read
     - email
     - offline_access
