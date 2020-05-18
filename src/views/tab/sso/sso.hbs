@@ -217,7 +217,7 @@
                     if (profileNames.length === 0) {
                         profilesDiv.text("No linked accounts.");
                     } else {
-                        for (let profileName in profileNames) {
+                        profileNames.forEach(profileName => {
                             profilesDiv.append($("<h3>").text(profileName));
 
                             let profile = profiles[profileName];
@@ -230,7 +230,7 @@
                                         .appendTo(profilesDiv);
                                 }
                             }
-                        }
+                        });
                     }
 
                     $("#divBotProfiles").show();

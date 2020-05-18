@@ -85,7 +85,9 @@ export class AuthBot extends builder.TeamsActivityHandler {
             await this.adapter.continueConversation(conversationRef, async (context: builder.TurnContext) => {
                 var tasks = this.identityProviderDialogs.map(async (dialog) => {
                     var profile = await dialog.getProfileAsync(context);
-                    profiles[dialog.displayName] = profile;
+                    if (profile) {
+                        profiles[dialog.displayName] = profile;
+                    }
                 });
                 await Promise.all(tasks);
             });
