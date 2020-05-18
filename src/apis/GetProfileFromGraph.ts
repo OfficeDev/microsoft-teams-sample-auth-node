@@ -82,13 +82,16 @@ export class GetProfileFromGraph {
                 graphAccessToken = tokenResponse.access_token;
             }
             catch (ex) {
-                // If this exception is due to additional consent required,
-                // the client code can use this show a consent popup
+                console.error("Error getting access token for Graph via On-Behalf-Of: ", ex);
 
-                console.error("ex: ", ex);
-                let code = this.needsInteraction(ex) ? 403 : 500;
-                // A production app should not propagate server errors to the client to prevent leaking information.
-                res.status(code).send(ex);
+                // If this exception is due to additional consent required, the client code can use this show a consent popup.
+                // A production app should carefully examine server information sent to the client, to avoid leaking information inadvertently 
+                if (ex.error && (ex.error.error === "invalid_grant" || ex.error.error === "interaction_required")) {
+                    res.status(403).send(ex.error.error);
+                } else {
+                    res.status(500);
+                }
+                return;
             }
 
             // The OBO grant flow can fail with error interaction_required if there are Conditional Access policies set.
@@ -107,9 +110,5 @@ export class GetProfileFromGraph {
             // Return profile as response
             res.status(200).send(profile);
         };
-    }
-
-    private needsInteraction(ex: any): boolean {
-        return ex.error && (ex.error.error === "invalid_grant" || ex.error.error === "interaction_required");
     }
 }
