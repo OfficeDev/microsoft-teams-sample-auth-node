@@ -103,7 +103,7 @@ let openIdMetadataV1 = new apis.OpenIdMetadata("https://login.microsoftonline.co
 let openIdMetadataV2 = new apis.OpenIdMetadata("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration");
 let validateAzureADToken = new apis.ValidateAzureADToken(openIdMetadataV1, openIdMetadataV2, appId).listen();     // Middleware to validate id_token
 
-app.get("/api/decodeToken", validateAzureADToken, new apis.DecodeIdToken().listen());
+app.get("/api/decodeToken", validateAzureADToken, new apis.DecodeToken().listen());
 app.get("/api/getProfileFromGraph", validateAzureADToken, new apis.GetProfileFromGraph(config.get("app.appId"), config.get("app.appPassword")).listen());
 app.get("/api/getProfilesFromBot", validateAzureADToken, async (req, res) => {
     let profiles = await bot.getUserProfilesAsync(res.locals.token["oid"]);
