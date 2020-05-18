@@ -21,16 +21,24 @@ This sample demonstrates authentication in Microsoft Teams apps.
 
 ## Getting started
 
-Follow the setup instructions in the [Microsoft Teams Sample (Node.JS)](https://github.com/OfficeDev/microsoft-teams-sample-complete-node), under [Steps to see the full app in Microsoft Teams](https://github.com/OfficeDev/microsoft-teams-sample-complete-node#steps-to-see-the-full-app-in-microsoft-teams), applying it to the code in this sample. The instructions in that project walk you through the following steps:
+1. Install some sort of tunnelling service. These instructions assume you are using ngrok: https://ngrok.com/
+1. Begin your tunnelling service to get an https endpoint. For this example ngrok is used. Start an ngrok tunnel with the following command (you'll need the https endpoint for the bot registration):<br>
 
-1. Set up a tunneling service such as [ngrok](https://ngrok.com/).
-1. Creating a bot registration.
-1. Configure the app so it runs as the registered bot.
-1. Create an app manifest (follow the "Manual" instructions) and sideload the app into Microsoft Teams.
+    ```bash
+    ngrok http 3978 --host-header=localhost
+    ```
 
-After that register the bot with Azure Bot Service, following the instructions [here](https://docs.microsoft.com/en-us/azure/bot-service/bot-service-quickstart-registration?view=azure-bot-service-3.0).
+1. Register a bot with Azure Bot Service, following the instructions [here](https://docs.microsoft.com/en-us/azure/bot-service/bot-service-quickstart-registration?view=azure-bot-service-3.0).
+1. While registering the bot, use `https://<your_ngrok_url>/api/messages` as the messaging endpoint.
+    > NOTE: When you create your bot you will create an App ID and App password - make sure you keep these for later.
 
-> **IMPORTANT**: Do not use the legacy Bot Framework portal, nor App Studio, to create the bot. Your bot MUST be registered with Azure Bot Service to use the authentication functionality provided by Azure Bot Service.
+> **IMPORTANT**: Do not use the legacy Bot Framework portal, nor App Studio, to create the bot. Your bot MUST be registered with
+> Azure Bot Service to use the authentication functionality provided by Azure Bot Service.
+
+1. Create an app manifest. Navigate to the file, manifest/manifest.json - Change:
+    1. <<REGISTERED_BOT_ID>> (there are 3) change to your registered bot's app ID
+    1. <<BASE_URI_DOMAIN>> (there are 5) change to your https endpoint from ngrok excluding the "https://" part
+    1. Save the file and zip this file and the bot_blue.png file (located next to it) together to create a manifest.zip file
 
 ## Setup
 
