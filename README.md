@@ -19,8 +19,6 @@ extensions:
 
 This sample demonstrates authentication in Microsoft Teams apps.
 
-There is a version of this app running on Microsoft Azure that you can try yourself. Download the [AuthBot.zip](https://github.com/OfficeDev/microsoft-teams-sample-auth-node/raw/master/manifest/AuthBot.zip) app package and then [upload it into Microsoft Teams](https://docs.microsoft.com/en-us/microsoftteams/platform/concepts/apps/apps-upload). Then start a chat with `@authbot`.
-
 ## Getting started
 
 Follow the setup instructions in the [Microsoft Teams Sample (Node.JS)](https://github.com/OfficeDev/microsoft-teams-sample-complete-node), under [Steps to see the full app in Microsoft Teams](https://github.com/OfficeDev/microsoft-teams-sample-complete-node#steps-to-see-the-full-app-in-microsoft-teams), applying it to the code in this sample. The instructions in that project walk you through the following steps:
