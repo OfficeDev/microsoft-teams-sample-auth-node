@@ -68,7 +68,7 @@ Registering a bot with the Microsoft Bot Framework automatically creates a corre
 1. Ensure that **State** is set to **Enabled**
 1. Select **Add scope**
     - Note: The domain part of the **Scope name** displayed just below the text field should automatically match the **Application ID** URI set in the previous step, with `/access_as_user` appended to the end; for example:
-        - `api://<your_ngrok_url>/c6c1f32b-5e55-4997-881a-753cc1d563b7/access_as_user`
+        - `api://<your_ngrok_url>/<aad_application_id>/access_as_user`
 1. In the **Authorized client applications** section, you identify the applications that you want to authorize to your app’s web application. Each of the following IDs needs to be entered:
     - `1fec8e78-bce4-4aaf-ab1b-5451cc387264` (Teams mobile/desktop application)
     - `5e3ce6c0-2b1f-4285-8d4b-75ee78787346` (Teams web application)
@@ -92,7 +92,7 @@ Registering a bot with the Microsoft Bot Framework automatically creates a corre
 
     ```json
     "webApplicationInfo": {
-    "id": "<application_GUID here>",
+    "id": "<AAD_application_id here>",
     "resource": "<web_API resource here>"
     }
     ```
