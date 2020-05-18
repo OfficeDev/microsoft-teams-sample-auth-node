@@ -24,11 +24,13 @@ This sample demonstrates authentication in Microsoft Teams apps.
 Follow the setup instructions in the [Microsoft Teams Sample (Node.JS)](https://github.com/OfficeDev/microsoft-teams-sample-complete-node), under [Steps to see the full app in Microsoft Teams](https://github.com/OfficeDev/microsoft-teams-sample-complete-node#steps-to-see-the-full-app-in-microsoft-teams), applying it to the code in this sample. The instructions in that project walk you through the following steps:
 
 1. Set up a tunneling service such as [ngrok](https://ngrok.com/).
-1. Register the bot with Azure Bot Service, following the instructions [here](https://docs.microsoft.com/en-us/azure/bot-service/bot-service-quickstart-registration?view=azure-bot-service-3.0).
+1. Creating a bot registration.
 1. Configure the app so it runs as the registered bot.
 1. Create an app manifest (follow the "Manual" instructions) and sideload the app into Microsoft Teams.
 
-> **IMPORTANT**:  Do not use the legacy Bot Framework portal, nor App Studio, to create the bot. Your bot MUST be registered with Azure Bot Service to use the authentication functionality provided by Azure Bot Service.
+After that register the bot with Azure Bot Service, following the instructions [here](https://docs.microsoft.com/en-us/azure/bot-service/bot-service-quickstart-registration?view=azure-bot-service-3.0).
+
+> **IMPORTANT**: Do not use the legacy Bot Framework portal, nor App Studio, to create the bot. Your bot MUST be registered with Azure Bot Service to use the authentication functionality provided by Azure Bot Service.
 
 ## Setup
 
@@ -78,7 +80,7 @@ Registering a bot with the Microsoft Bot Framework automatically creates a corre
     - offline_access
     - openid
     - profile
-1. Scroll to the bottom of the page and click on "Save".
+1. Scroll to the bottom of the page and click on "Add Permissions".
 
 1. The bot uses `MICROSOFT_APP_ID` and `MICROSOFT_APP_PASSWORD`, so these should already be set.
 
@@ -108,6 +110,12 @@ Registering a bot with the Microsoft Bot Framework automatically creates a corre
         "token.botframework.com"
     ],
     ```
+
+Notes:
+
+-   The resource for an AAD app will usually just be the root of its site URL and the appID (e.g. api://subdomain.example.com/6789/c6c1f32b-5e55-4997-881a-753cc1d563b7). We also use this value to ensure your request is coming from the same domain. Therefore make sure that your contentURL for your tab uses the same domains as your resource property.
+-   You need to be using manifest version 1.5 or higher for these fields to be used.
+-   Scopes aren’t supported in the manifest and instead should be specified in the API Permissions section in the Azure portal
 
 ### Add the Azure AD OAuth connection to the bot
 
@@ -145,7 +153,6 @@ Registering a bot with the Microsoft Bot Framework automatically creates a corre
 1. Click **Save**.
 1. Set the environment variable `LINKEDIN_CONNECTIONNAME` to the name that you chose for this OAuth connection.
 
-
 ### [Optional] Using Google
 
 1. Obtain OAuth2 client credentials from the [Google API Console](https://console.developers.google.com). Enable access to the [Google People API](https://developers.google.com/people/).
@@ -169,8 +176,8 @@ Registering a bot with the Microsoft Bot Framework automatically creates a corre
 
 Before proceeding, it's wise to test the OAuth connections that you have configured with the Azure Bot Service.
 
-1. Open the [Bot Channel Registrations](https://ms.portal.azure.com/#blade/HubsExtension/BrowseResourceBlade/resourceType/Microsoft.BotService%2FbotServices) blade on the Azure Portal
-1. Navigate to your Bot Channel Registration resource.
+1. Open the [Bot Channels Registrations](https://ms.portal.azure.com/#blade/HubsExtension/BrowseResourceBlade/resourceType/Microsoft.BotService%2FbotServices) blade on the Azure Portal
+1. Navigate to your Bot Channels Registration resource.
 1. Click **Settings**.
 1. Under **OAuth Connection Settings** near the bottom of the page, click on the connection.
 1. Click on **Test connection**.
