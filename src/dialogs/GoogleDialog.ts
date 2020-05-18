@@ -21,51 +21,51 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+import * as request from "request-promise";
 import * as builder from "botbuilder";
-import * as constants from "../constants";
-import { GoogleProvider } from "../providers";
-import { BaseIdentityDialog } from "./BaseIdentityDialog";
+import { IdentityProviderDialog } from "./IdentityProviderDialog";
 
-// Dialog that handles dialogs for Google provider
-export class GoogleDialog extends BaseIdentityDialog
-{
-    constructor() {
-        super(constants.IdentityProvider.google, constants.DialogId.Google);
+export const GOOGLE_DIALOG = "GoogleDialog";
+const meProfileUrl = "https://people.googleapis.com/v1/people/me";
+
+export class GoogleDialog extends IdentityProviderDialog {
+
+    constructor(
+        connectionName: string)
+    {
+        super(GOOGLE_DIALOG, connectionName);
     }
 
-    // Show user profile
-    protected async showUserProfile(session: builder.Session): Promise<void> {
-        let linkedInApi = this.authProvider as GoogleProvider;
-        let userToken = this.getUserToken(session);
+    public get displayName() { return "Google"; }
 
-        if (userToken) {
-            let profile = await linkedInApi.getProfileAsync(userToken.accessToken, [ "names", "emailAddresses", "photos", "urls" ]);
-
-            let name = this.findPrimaryValue(profile.names);
-            let email = this.findPrimaryValue(profile.emailAddresses);
-            let photo = this.findPrimaryValue(profile.photos);
-            let profileUrl = this.findPrimaryValue(profile.urls);
-
-            let profileCard = new builder.ThumbnailCard()
-                .title(name.displayName)
-                .subtitle(email.value)
-                .buttons([
-                    builder.CardAction.openUrl(session, profileUrl.value, "View on Google"),
-                ])
-                .images([
-                    new builder.CardImage()
-                        .url(photo.url)
-                        .alt(name.displayName),
-                ]);
-            session.send(new builder.Message().addAttachment(profileCard));
-        } else {
-            session.send("Please sign in to Google so I can access your profile.");
-        }
-
-        await this.promptForAction(session);
+    protected async getProfileFromProvider(accessToken: string): Promise<any> {
+        let options = {
+            url: `${meProfileUrl}?personFields=names,emailAddresses,photos,urls`,
+            json: true,
+            headers: {
+                "Authorization": `Bearer ${accessToken}`,
+            },
+        };
+        const profile = await request.get(options);
+        return {
+            name: this.findPrimaryValue(profile.names),
+            email: this.findPrimaryValue(profile.emailAddresses),
+            photo: this.findPrimaryValue(profile.photos),
+        };
     }
 
-    // Find the value marked as primary
+    protected async getProfileCard(accessToken: string): Promise<builder.Attachment> {
+        const profile = await this.getProfileFromProvider(accessToken);
+        return builder.CardFactory.thumbnailCard(
+            profile.name.displayName,
+            [
+                { url: profile.photo.url }
+            ],
+            [
+            ],
+            { subtitle: profile.email.value });
+    }
+
     private findPrimaryValue(values: any[]): any {
         values = values || [];
         return values.find(value => value.metadata.primary);

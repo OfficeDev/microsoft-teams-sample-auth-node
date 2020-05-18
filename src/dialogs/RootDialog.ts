@@ -22,77 +22,66 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import * as builder from "botbuilder";
-import * as constants from "../constants";
-import * as storage from "../storage";
-import { LinkedInDialog } from "./LinkedInDialog";
-import { AzureADv1Dialog } from "./AzureADv1Dialog";
-import { GoogleDialog } from "./GoogleDialog";
+import * as dialogs from "botbuilder-dialogs";
+import { IdentityProviderDialog } from "./IdentityProviderDialog";
 
-// Root dialog provides choices in identity providers
-export class RootDialog extends builder.IntentDialog
-{
-    private botStorage: storage.IBotExtendedStorage;
+const ROOT_DIALOG = "RootDialog";
+const CHOICE_PROMPT = "ChoicePrompt";
+const MAIN_WATERFALL_DIALOG = "MainWaterfallDialog";
 
-    constructor() {
-        super();
+export class RootDialog extends dialogs.ComponentDialog {
+
+    constructor(
+        private identityProviderDialogs: IdentityProviderDialog[]
+    ) {
+        super(ROOT_DIALOG);
+
+        this.addDialog(new dialogs.ChoicePrompt(CHOICE_PROMPT));
+        this.addDialog(new dialogs.WaterfallDialog(MAIN_WATERFALL_DIALOG, [
+            this.chooseAuthProviderStep.bind(this),
+            this.startAuthProviderDialogStep.bind(this),
+            this.restartDialogStep.bind(this),
+        ]));
+        this.identityProviderDialogs.forEach(dialog => this.addDialog(dialog));
+
+        this.initialDialogId = MAIN_WATERFALL_DIALOG;
     }
 
-    // Register the dialog with the bot
-    public register(bot: builder.UniversalBot): void {
-        bot.dialog(constants.DialogId.Root, this);
+    /**
+     * The run method handles the incoming activity (in the form of a DialogContext) and passes it through the dialog system.
+     * If no dialog is active, it will start the default dialog.
+     */
+    public async run(context: builder.TurnContext, accessor: builder.StatePropertyAccessor<dialogs.DialogState>) {
+        const dialogSet = new dialogs.DialogSet(accessor);
+        dialogSet.add(this);
 
-        this.botStorage = bot.get("storage") as storage.IBotExtendedStorage;
-
-        this.onBegin((session, args, next) => { this.onDialogBegin(session, args, next); });
-        this.onDefault((session) => { this.onMessageReceived(session); });
-
-        new LinkedInDialog().register(bot, this);
-        new AzureADv1Dialog().register(bot, this);
-        new GoogleDialog().register(bot, this);
-        this.matches(/linkedIn/i, constants.DialogId.LinkedIn);
-        this.matches(/azureADv1/i, constants.DialogId.AzureADv1);
-        this.matches(/google/i, constants.DialogId.Google);
-    }
-
-    // Handle resumption of dialog
-    public dialogResumed<T>(session: builder.Session, result: builder.IDialogResult<T>): void {
-        this.promptForIdentityProvider(session);
-    }
-
-    // Handle start of dialog
-    private async onDialogBegin(session: builder.Session, args: any, next: () => void): Promise<void> {
-        // Stamp the user data bag with the user's AAD object ID, so we can look it up later
-        let aadObjectId = (session.message.address.user as any).aadObjectId;
-        this.botStorage.setAAdObjectId(session.userData, aadObjectId);
-
-        session.dialogData.isFirstTurn = true;
-        this.promptForIdentityProvider(session);
-        next();
-    }
-
-    // Handle message
-    private async onMessageReceived(session: builder.Session): Promise<void> {
-        if (!session.dialogData.isFirstTurn) {
-            // Unrecognized input
-            session.send("I didn't understand that.");
-            this.promptForIdentityProvider(session);
-        } else {
-            delete session.dialogData.isFirstTurn;
+        const dialogContext = await dialogSet.createContext(context);
+        const results = await dialogContext.continueDialog();
+        if (results.status === dialogs.DialogTurnStatus.empty) {
+            await dialogContext.beginDialog(this.id);
         }
     }
 
-    // Prompt the user to pick an identity provider
-    private promptForIdentityProvider(session: builder.Session): void {
-        let msg = new builder.Message(session)
-            .addAttachment(new builder.ThumbnailCard(session)
-                .title("Select an identity provider")
-                .buttons([
-                    builder.CardAction.imBack(session, "LinkedIn", "LinkedIn"),
-                    builder.CardAction.messageBack(session, "{}", "AzureAD (v1)")
-                        .displayText("AzureAD (v1)")
-                        .text("AzureADv1"),
-                    builder.CardAction.imBack(session, "Google", "Google"),
-                ]));
-        session.send(msg);
+    private async chooseAuthProviderStep(step: dialogs.WaterfallStepContext) {
+        return await step.prompt(CHOICE_PROMPT, {
+            prompt: "Select an identity provider",
+            choices: dialogs.ChoiceFactory.toChoices(this.identityProviderDialogs.map(dialog => dialog.displayName)),
+        });
+    }
+
+    private async startAuthProviderDialogStep(step: dialogs.WaterfallStepContext) {
+        const choice = step.result.value;
+
+        const dialog = this.identityProviderDialogs.find(dialog => dialog.displayName === choice);
+        if (dialog) {
+            return await step.beginDialog(dialog.id);
+        } else {
+            await step.context.sendActivity(`"I didn't recognize your choice '${choice}'`);
+            return await step.replaceDialog(MAIN_WATERFALL_DIALOG);
+        }
+    }
+
+    private restartDialogStep(stepContext: dialogs.WaterfallStepContext) {
+        return stepContext.replaceDialog(MAIN_WATERFALL_DIALOG);
     }
 }

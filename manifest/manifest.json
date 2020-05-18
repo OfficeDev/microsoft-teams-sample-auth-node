@@ -7,8 +7,8 @@
   "developer": {
     "name": "Your Name Here",
     "websiteUrl": "https://www.example.com",
-    "privacyUrl": "https://privacy.microsoft.com/PrivacyStatement",
-    "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement/"
+    "privacyUrl": "https://www.example.com/PrivacyStatement",
+    "termsOfUseUrl": "https://www.example.com/TermsOfUse"
   },
   "name": {
     "short": "Teams AuthBot"
@@ -64,7 +64,8 @@
     "identity"
   ],
   "validDomains": [
-    "<<BASE_URI_DOMAIN>>"
+    "<<BASE_URI_DOMAIN>>",
+    "token.botframework.com"
   ],
   "webApplicationInfo": {
       "id": "<<REGISTERED_BOT_ID>>",

@@ -39,20 +39,24 @@
 
     <!-- Login button -->
     <button id="btnSSO" style="display: none" onclick="showUserInformationUsingSSO()">Single Sign-On</button>
-
     <p id="divError" style="display: none" class="auth-data"></p>
+
     <!-- Result -->
 
     <h2>Claims from SSO access_token</h2>
-    <div id="divIdTokenError" style="display: none" class="auth-data"></div>
-    <div id="divIdTokenClaims" style="display: none" class="auth-data"></div>
+    <div id="divAccessTokenError" style="display: none" class="auth-data"></div>
+    <div id="divAccessTokenClaims" style="display: none" class="auth-data"></div>
+    <p id="divRawAccessToken" style="display: none" class="auth-data"></p>
 
     <h2>Profile from Microsoft Graph (via On-Behalf-Of flow)</h2>
+    <button id="btnGraphAccess" onclick="loginV2()" style="display: none">Grant access to Microsoft Graph</button>
     <div id="divGraphProfileError" style="display: none" class="auth-data"></div>
     <div id="divGraphProfile" style="display: none" class="auth-data"></div>
-    <br />
-    <button id="btnAccess" onclick="loginV2()" style="display: none">Grant access to Microsoft Graph</button>
 
+    <h2>Profile from account(s) linked through the bot</h2>
+    <div id="divBotProfilesError" style="display: none" class="auth-data"></div>
+    <div id="divBotProfiles" style="display: none" class="auth-data"></div>
+    <p>&nbsp;</p>
 
     <script src="https://code.jquery.com/jquery-3.1.1.js"
         integrity="sha384-VC7EHu0lDzZyFfmjTPJq+DFyIn8TUGAJbEtpXquazFVr00Q/OOx//RjiZ9yU9+9m"
@@ -72,55 +76,47 @@
 
         function showUserInformationUsingSSO() {
             var authTokenRequest = {
-                successCallback: function (result) {
-                    $('#btnSSO').css({ display: "none" });
-                    $("#btnAccess").css({ display: "none" });
-                    showUserInformation(result);
+                successCallback: function (token) {
+                    $('#btnSSO').hide();
+                    $("#btnGraphAccess").hide();
+                    showUserInformationInToken(token);
+                    showUserProfileFromGraph(token);
+                    showProfilesFromBot(token);
                 },
                 failureCallback: function (error) {
                     console.log('SSO failureCallback error: ', error);
-                    $('#btnSSO').css({ display: "" });
-                    handleAuthError(error, "divError");
+                    $('#btnSSO').show();
+                    showAuthError(error, "divError");
                 }
             };
             microsoftTeams.authentication.getAuthToken(authTokenRequest);
         }
 
         // Login to Azure AD and get access to Microsoft Graph
-        function login(url) {
-
+        function loginV2() {
             microsoftTeams.authentication.authenticate({
-                url: url,
+                url: window.location.origin + "/tab/simple-start-v2",
                 width: 600,
                 height: 535,
                 successCallback: function (result) {
-                    console.log("Login succeeded: " + result);
-
-                    let data = localStorage.getItem(result);
-                    localStorage.removeItem(result);
-
-                    let tokenResult = JSON.parse(data);
-                    showUserInformationUsingSSO();
+                    // Wait 3 seconds to allow for any delays in AAD recording consent
+                    setTimeout(() => showUserInformationUsingSSO(), 3000);
                 },
                 failureCallback: function (reason) {
                     console.log("Login failed: " + reason);
-                    handleAuthError(reason, "divGraphProfileError");
+                    showAuthError(reason, "divGraphProfileError");
                 }
             });
         }
 
-        function loginV2() {
-            // reusing the same flow to call v2 endpoint as in simple auth
-            login(window.location.origin + "/tab/simple-start-v2");
-        }
+        // Show the token and the user information that it has in its claims
+        function showUserInformationInToken(accessToken) {
+            $("#divRawAccessToken").text(accessToken).show();
 
-        // Get the user's profile information
-        function showUserInformation(accessToken) {
-
-            // A. The app can use the SSO token as proof of the user's identity.
-            // The /api/decodeToken endpoint takes an id_token in the Authorization header and validates it
-            // as per (https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-token-and-claims#idtokens).
-            // If successful, it returns the decoded token. Otherwise it return an HTTP 401 Unauthorized response.
+            // The app can use the SSO token as proof of the user's identity.
+            // The /api/decodeToken endpoint takes an access token in the Authorization header and validates it
+            // as per (https://docs.microsoft.com/en-us/azure/active-directory/develop/active-directory-token-and-claims).
+            // If successful, it returns the decoded token. Otherwise it returns an HTTP 401 Unauthorized response.
 
             $.ajax({
                 url: window.location.origin + "/api/decodeToken",
@@ -128,7 +124,7 @@
                     request.setRequestHeader("Authorization", "Bearer " + accessToken);
                 },
                 success: function (token) {
-                    let claimsDiv = $("#divIdTokenClaims");
+                    let claimsDiv = $("#divAccessTokenClaims");
                     claimsDiv.empty();
 
                     for (let claimId in token) {
@@ -138,25 +134,28 @@
                             .appendTo(claimsDiv);
                     }
 
-                    $("#divIdTokenClaims").css({ display: "" });
-                    $("#divIdTokenError").css({ display: "none" });
+                    $("#divAccessTokenClaims").show();
+                    $("#divAccessTokenError").hide();
                 },
                 error: function (xhr, textStatus, errorThrown) {
                     console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
-                    $("#divIdTokenError").text(errorThrown).css({ display: "" });
-                    $("#divIdTokenClaims").css({ display: "none" });
+                    
+                    $("#divAccessTokenError").text(errorThrown).show();
+                    $("#divAccessTokenClaims").hide();
                 },
             });
+        }
 
-            // B. The current implementation for SSO only grants consent for
-            // user-level permissions (email, profile, offline_access, openid)
-            // but not for other APIs. If your app needs further Graph scopes,
-            // there are some workarounds to enable this.
-            // This code prompts for user consent for additional scopes
+        // Get the user's profile information
+        function showUserProfileFromGraph(accessToken) {
+            // The current implementation for SSO only grants consent for OpenID Connect scopes (email, profile, openid)
+            // and offline_access, but not for other APIs. If your app needs further scopes, there are some workarounds to enable this.
+            // This code prompts for user consent to additional scopes.
 
             // Through the Azure AD On-Behalf-Of flow, the app can exchange it for an access token for
             // other APIs that the user has consented to. In this example, the app gets a Graph token and
             // returns the user's full Azure AD profile.
+
             $.ajax({
                 url: window.location.origin + "/api/getProfileFromGraph",
                 beforeSend: function (request) {
@@ -175,41 +174,81 @@
                         }
                     }
 
-                    $("#divGraphProfile").css({ display: "" });
-                    $("#divGraphProfileError").css({ display: "none" });
+                    $("#divGraphProfile").show();
+                    $("#divGraphProfileError").hide();
                 },
                 error: function (xhr, textStatus, errorThrown) {
+                    console.log("Error getting profile: ", errorThrown);
 
-                    console.log('error getting profile: ', errorThrown);
-                    // Extracting the error from the response that the server sends
+                    // Extract the error from the response that the server sends
                     // If the error contains consent_required or interaction_required codes
                     // then we can ask the user to grant additional consent to access Microsoft Graph
-                    let err = xhr.responseJSON && xhr.responseJSON.error && xhr.responseJSON.error.error;
-                    let subError = (xhr.responseJSON && xhr.responseJSON.error && xhr.responseJSON.error.suberror);
-                    showConsentButton(err, subError);
+                    let errorCode = xhr.responseText;
+                    console.log("Error code from getProfileFromGraph: ", errorCode);
 
-                    $("#divGraphProfileError").text(subError).css({ display: "" });
-                    $("#divGraphProfile").css({ display: "none" });
+                    // Only show consent button for invalid_grant or interaction_required
+                    if (errorCode === "invalid_grant" || errorCode === "interaction_required") {
+                        $("#btnGraphAccess").show();
+                    } else {
+                        $("#divGraphProfileError").text(errorCode || "Error getting profile from Graph").show();
+                    }
+
+                    $("#divGraphProfile").hide();
                 },
             });
         }
 
-        function showConsentButton(err, subError) {
-            // Only show consent button for invalid_grant due to consent_required or interaction_required
-            if (err == "invalid_grant" || err == "interaction_required") {
-                console.log("err: ", err);
-                console.log("sub err: ", subError);
-                $("#btnAccess").css({ display: "" });
-            }
+        function showProfilesFromBot(accessToken) {
+            // C) The access token serves as verifiable evidence of the user's identity, in particular, it has
+            // a claim of the user's Azure AD object id ("oid"). With the TID+OID as a key, the app can share
+            // data betwen it's various capabilities (tab, bot, messaging extension). Here, the tab uses the
+            // /api/getProfilesFromBot endpoint to show  profiles from the various services that the user has
+            // signed in to via the bot.
+            $.ajax({
+                url: window.location.origin + "/api/getProfilesFromBot",
+                beforeSend: function(request) {
+                    request.setRequestHeader("Authorization", "Bearer " + accessToken);
+                },
+                success: function (profiles) {
+                    let profilesDiv = $("#divBotProfiles");
+                    profilesDiv.empty();
 
+                    let profileNames = Object.keys(profiles).sort();
+                    if (profileNames.length === 0) {
+                        profilesDiv.text("No linked accounts.");
+                    } else {
+                        profileNames.forEach(profileName => {
+                            profilesDiv.append($("<h3>").text(profileName));
+
+                            let profile = profiles[profileName];
+                            for (let key in profile) {
+                                let value = profile[key];
+                                if ((key[0] !== "@") && value) {
+                                    $("<div>")
+                                        .append($("<b>").text(key + ": "))
+                                        .append($("<span>").text((value instanceof Object) ?  JSON.stringify(value) : value))
+                                        .appendTo(profilesDiv);
+                                }
+                            }
+                        });
+                    }
+
+                    $("#divBotProfiles").show();
+                    $("#divBotProfilesError").hide();
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    console.log("textStatus: " + textStatus + ", errorThrown:" + errorThrown);
+                    $("#divBotProfilesError").text(errorThrown).show();
+                    $("#divBotProfiles").hide();
+                },
+            });
         }
 
         // Show error information
-        function handleAuthError(reason, errorDivId) {
-            $("#"+errorDivId).text(reason).css({ display: "" });
-            $("#divProfile").css({ display: "none" });
+        function showAuthError(reason, errorDivId) {
+            $("#" + errorDivId).text(reason).show();
+            $("#divProfile").hide();
         }
-
     </script>
 </body>
 

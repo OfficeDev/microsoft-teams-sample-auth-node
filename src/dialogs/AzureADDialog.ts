@@ -25,48 +25,39 @@ import * as request from "request-promise";
 import * as builder from "botbuilder";
 import { IdentityProviderDialog } from "./IdentityProviderDialog";
 
-export const LINKEDIN_DIALOG = "LinkedInDialog";
-const apiBaseUrl = "https://api.linkedin.com/v2";
+export const AZUREAD_DIALOG = "AzureADDialog";
+const graphProfileUrl = "https://graph.microsoft.com/v1.0/me";
 
-export class LinkedInDialog extends IdentityProviderDialog {
+export class AzureADDialog extends IdentityProviderDialog {
 
     constructor(
         connectionName: string)
     {
-        super(LINKEDIN_DIALOG, connectionName);
+        super(AZUREAD_DIALOG, connectionName);
     }
 
-    public get displayName() { return "LinkedIn"; }
+    public get displayName() { return "Azure AD"; }
 
     protected async getProfileFromProvider(accessToken: string): Promise<any> {
         let options = {
-            url: `${apiBaseUrl}/me?projection=(id,firstName,lastName,profilePicture(displayImage~:playableStreams))`,
+            url: graphProfileUrl,
             json: true,
             headers: {
                 "Authorization": `Bearer ${accessToken}`,
             },
         };
-        const profile = await request.get(options);
-        return {
-            localizedFirstName: this.getPreferredLocalizedString(profile.firstName),
-            localizedLastName: this.getPreferredLocalizedString(profile.lastName),
-            profilePictureUrl: profile.profilePicture["displayImage~"].elements[0].identifiers[0].identifier,
-        }
+        return await request.get(options);
     }
 
     protected async getProfileCard(accessToken: string): Promise<builder.Attachment> {
-        let profile = await this.getProfileFromProvider(accessToken);
+        const profile = await this.getProfileFromProvider(accessToken);
         return builder.CardFactory.thumbnailCard(
-            `${profile.localizedFirstName} ${profile.localizedLastName}`,
-            [
-                { url: profile.profilePictureUrl }
-            ],
-            [
-            ]);
-    }
-
-    private getPreferredLocalizedString(localizedString: any): string {
-        const preferredLocale = `${localizedString.preferredLocale.language}_${localizedString.preferredLocale.country}`;
-        return localizedString.localized[preferredLocale];
+            profile.displayName,
+            `<b>E-mail</b>: ${profile.mail}<br/>
+            <b>Title</b>: ${profile.jobTitle}<br/>
+            <b>Office location</b>: ${profile.officeLocation}`,
+            [],
+            [],
+            { subtitle: profile.userPrincipalName });
     }
 }

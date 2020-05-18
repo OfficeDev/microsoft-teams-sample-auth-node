@@ -23,8 +23,8 @@
 
 import * as express from "express";
 
-// Decode the id_token from AAD in the Authorization header
-export class DecodeIdToken {
+// Decode the token from AAD in the Authorization header
+export class DecodeToken {
 
     public listen(): express.RequestHandler {
         return (req: express.Request, res: express.Response) => {

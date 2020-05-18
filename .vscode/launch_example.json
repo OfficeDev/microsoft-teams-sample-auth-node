@@ -17,10 +17,9 @@
                 "BASE_URI": "https://BASE_URI",
                 "MICROSOFT_APP_ID": "MICROSOFT_APP_ID",
                 "MICROSOFT_APP_PASSWORD": "MICROSOFT_APP_PASSWORD",
-                "LINKEDIN_CLIENT_ID": "LINKEDIN_CLIENT_ID",
-                "LINKEDIN_CLIENT_SECRET": "LINKEDIN_CLIENT_SECRET",
-                "GOOGLE_CLIENT_ID": "GOOGLE_CLIENT_ID",
-                "GOOGLE_CLIENT_SECRET": "GOOGLE_CLIENT_ID",
+                "AZUREAD_CONNECTIONNAME": "",
+                "LINKEDIN_CONNECTIONNAME": "",
+                "GOOGLE_CONNECTIONNAME": "",
                 "NODE_DEBUG": "botbuilder"
             }
         },
@@ -37,10 +36,9 @@
                 "BASE_URI": "https://BASE_URI",
                 "MICROSOFT_APP_ID": "MICROSOFT_APP_ID",
                 "MICROSOFT_APP_PASSWORD": "MICROSOFT_APP_PASSWORD",
-                "LINKEDIN_CLIENT_ID": "LINKEDIN_CLIENT_ID",
-                "LINKEDIN_CLIENT_SECRET": "LINKEDIN_CLIENT_SECRET",
-                "GOOGLE_CLIENT_ID": "GOOGLE_CLIENT_ID",
-                "GOOGLE_CLIENT_SECRET": "GOOGLE_CLIENT_ID",
+                "AZUREAD_CONNECTIONNAME": "",
+                "LINKEDIN_CONNECTIONNAME": "",
+                "GOOGLE_CONNECTIONNAME": "",
                 "NODE_DEBUG": "botbuilder",
                 "http_proxy": "http://localhost:8888",
                 "no_proxy": "login.microsoftonline.com",
@@ -59,10 +57,9 @@
                 "BASE_URI": "https://BASE_URI",
                 "MICROSOFT_APP_ID": "MICROSOFT_APP_ID",
                 "MICROSOFT_APP_PASSWORD": "MICROSOFT_APP_PASSWORD",
-                "LINKEDIN_CLIENT_ID": "LINKEDIN_CLIENT_ID",
-                "LINKEDIN_CLIENT_SECRET": "LINKEDIN_CLIENT_SECRET",
-                "GOOGLE_CLIENT_ID": "GOOGLE_CLIENT_ID",
-                "GOOGLE_CLIENT_SECRET": "GOOGLE_CLIENT_ID",
+                "AZUREAD_CONNECTIONNAME": "",
+                "LINKEDIN_CONNECTIONNAME": "",
+                "GOOGLE_CONNECTIONNAME": "",
                 "NODE_DEBUG": "botbuilder"
             }
         }

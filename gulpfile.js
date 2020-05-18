@@ -3,11 +3,8 @@ var ts = require('gulp-typescript');
 var tslint = require('gulp-tslint');
 var del = require('del');
 var server = require('gulp-develop-server');
-var mocha = require('gulp-spawn-mocha');
 var sourcemaps = require('gulp-sourcemaps');
 var zip = require('gulp-zip');
-var rename = require('gulp-rename');
-var jsonTransform = require('gulp-json-transform');
 var path = require('path');
 var minimist = require('minimist');
 var fs = require('fs');
@@ -28,7 +25,7 @@ var tsProject = ts.createProject('./tsconfig.json', {
 
 var filesToWatch = ['**/*.ts', '!node_modules/**'];
 var filesToLint = ['**/*.ts', '!src/typings/**', '!node_modules/**'];
-var staticFiles = ['src/**/*.json', 'src/**/*.hbs'];
+var staticFiles = ['**/*.json', '**/*.hbs'];
 
 /**
  * Clean build output.
@@ -73,7 +70,7 @@ gulp.task('ts', function() {
  * Copy statics to build directory.
  */
 gulp.task('statics:copy', function () {
-    return gulp.src(staticFiles, { base: '.' })
+    return gulp.src(staticFiles, { base: 'src' })
         .pipe(gulp.dest('./build'));
 });
 
@@ -93,16 +90,6 @@ gulp.task('generate-manifest', function() {
 });
 
 /**
- * Run tests.
- */
-gulp.task('test', gulp.series(gulp.parallel('ts', 'statics:copy'), function() {
-    return gulp
-        .src('build/test/' + options.specFilter + '.spec.js', {read: false})
-        .pipe(mocha({cwd: 'build/src', exit: true}))
-        .on('error', console.error);
-}));
-
-/**
  * Package up app into a ZIP file for Azure deployment.
  */
 gulp.task('package', gulp.series('rebuild', function () {
@@ -112,10 +99,7 @@ gulp.task('package', gulp.series('rebuild', function () {
         'web.config',
         'package.json',
         '**/node_modules/**',
-        '!build/src/**/*.js.map', 
-        '!build/test/**/*', 
-        '!build/test', 
-        '!build/src/typings/**/*'];
+        '!build/**/*.js.map'];
 
     //add exclusion patterns for all dev dependencies
     var packageJSON = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));

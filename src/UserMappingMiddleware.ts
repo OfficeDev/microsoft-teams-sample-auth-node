@@ -23,16 +23,27 @@
 
 import * as builder from "botbuilder";
 
-/** Replacable storage system used by UniversalBot. */
-export class NullBotStorage implements builder.IBotStorage {
+// Simple middleware to save a mapping of AAD object ID -> Teams IDs (user ID, conversation ID, service URL)
+// This is a memory-based store for demonstration purposes only
+export class UserMappingMiddleware {
 
-    // Reads in data from storage
-    public getData(context: builder.IBotStorageContext, callback: (err: Error, data: builder.IBotStorageData) => void): void {
-        callback(null, {});
-    }
+    constructor(
+        private aadObjectIdToBotUserMap: Map<string, any>, 
+    )
+    { }
 
-    // Writes out data from storage
-    public saveData(context: builder.IBotStorageContext, data: builder.IBotStorageData, callback?: (err: Error) => void): void {
-        callback(null);
-    }
+    public async onTurn(context: builder.TurnContext, next) {
+        if (!context) {
+            throw new Error('Context is null');
+        };
+
+        const activity = context.activity;
+        if (activity.channelId === "msteams" && 
+            (activity.type === "conversationUpdate" || activity.type === "message" || activity.type === "invoke")) {
+            this.aadObjectIdToBotUserMap.set(activity.from.aadObjectId, 
+                { userId: activity.from.id, conversationId: activity.conversation.id, serviceUrl: activity.serviceUrl });
+        }
+
+        await next();
+    };
 }

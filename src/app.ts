@@ -28,20 +28,22 @@ let bodyParser = require("body-parser");
 let favicon = require("serve-favicon");
 let http = require("http");
 let path = require("path");
+import * as builder from "botbuilder";
 import * as config from "config";
-import * as msteams from "botbuilder-teams";
 import * as apis from "./apis";
-import * as providers from "./providers";
-import * as storage from "./storage";
 import { AuthBot } from "./AuthBot";
 import { logger } from "./utils/index";
+import { RootDialog } from "./dialogs/RootDialog";
+import { AzureADDialog } from "./dialogs/AzureADDialog";
+import { LinkedInDialog } from "./dialogs/LinkedInDialog";
+import { GoogleDialog } from "./dialogs/GoogleDialog";
 
 let app = express();
 let appId = config.get("app.appId");
 
 app.set("port", process.env.PORT || 3978);
-app.use(express.static(path.join(__dirname, "../../public")));
-app.use(favicon(path.join(__dirname, "../../public/assets", "favicon.ico")));
+app.use(express.static(path.join(__dirname, "../public")));
+app.use(favicon(path.join(__dirname, "../public/assets", "favicon.ico")));
 app.use(bodyParser.json());
 
 let handlebars = exphbs.create({
@@ -55,44 +57,36 @@ app.engine("hbs", handlebars.engine);
 app.set("view engine", "hbs");
 
 // Configure storage
-let botStorageProvider = config.get("storage");
-let botStorage = null;
-switch (botStorageProvider) {
-    case "mongoDb":
-        botStorage = new storage.MongoDbBotStorage(config.get("mongoDb.botStateCollection"), config.get("mongoDb.connectionString"));
-        break;
-    case "memory":
-        botStorage = new storage.MemoryBotStorage();
-        break;
-    case "null":
-        botStorage = new storage.NullBotStorage();
-        break;
-}
+const botStorage = new builder.MemoryStorage();
+const conversationState = new builder.ConversationState(botStorage);
+const userState = new builder.UserState(botStorage);
 
-// Create chat bot
-let connector = new msteams.TeamsChatConnector({
+// Create adapter
+const adapter = new builder.BotFrameworkAdapter({
     appId: config.get("bot.appId"),
     appPassword: config.get("bot.appPassword"),
 });
-let botSettings = {
-    storage: botStorage,
-    linkedIn: new providers.LinkedInProvider(config.get("linkedIn.clientId"), config.get("linkedIn.clientSecret")),
-    azureADv1: new providers.AzureADv1Provider(config.get("azureAD.appId"), config.get("azureAD.appPassword")),
-    google: new providers.GoogleProvider(config.get("google.clientId"), config.get("google.clientSecret")),
-};
-let bot = new AuthBot(connector, botSettings, app);
 
-// Log bot errors
-bot.on("error", (error: Error) => {
-    logger.error(error.message, error);
-});
+// Create dialogs and bot
+const identityProviderDialogs = [];
+
+function addDialog<TDialog>(TCreator: { new (connectionName: string): TDialog}, configurationName: string) {
+    if (config.has(configurationName) && config.get(configurationName)) {
+        identityProviderDialogs.push(new TCreator(config.get(configurationName)));
+    }
+}
+addDialog(AzureADDialog, "azureAD.connectionName");
+addDialog(LinkedInDialog, "linkedIn.connectionName");
+addDialog(GoogleDialog, "google.connectionName");
+
+let bot = new AuthBot(adapter, conversationState, userState, new RootDialog(identityProviderDialogs), identityProviderDialogs);
 
 // Configure bot routes
-app.post("/api/messages", connector.listen());
-
-// Configure auth callback routes
-app.get("/auth/:provider/callback", (req, res) => {
-    bot.handleOAuthCallback(req, res, req.params["provider"]);
+app.post("/api/messages", (req, res) => {
+    adapter.processActivity(req, res, async (turnContext) => {
+        // Route the message to the bot's main handler.
+        await bot.run(turnContext);
+    });
 });
 
 // Tab authentication sample routes
@@ -109,7 +103,7 @@ let openIdMetadataV1 = new apis.OpenIdMetadata("https://login.microsoftonline.co
 let openIdMetadataV2 = new apis.OpenIdMetadata("https://login.microsoftonline.com/common/v2.0/.well-known/openid-configuration");
 let validateAzureADToken = new apis.ValidateAzureADToken(openIdMetadataV1, openIdMetadataV2, appId).listen();     // Middleware to validate id_token
 
-app.get("/api/decodeToken", validateAzureADToken, new apis.DecodeIdToken().listen());
+app.get("/api/decodeToken", validateAzureADToken, new apis.DecodeToken().listen());
 app.get("/api/getProfileFromGraph", validateAzureADToken, new apis.GetProfileFromGraph(config.get("app.appId"), config.get("app.appPassword")).listen());
 app.get("/api/getProfilesFromBot", validateAzureADToken, async (req, res) => {
     let profiles = await bot.getUserProfilesAsync(res.locals.token["oid"]);
