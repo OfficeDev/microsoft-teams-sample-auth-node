@@ -15,6 +15,8 @@ extensions:
     createdDate: '2/8/2018 5:06:47 PM'
 ---
 
+#### **NOTE:** This repository is now archived. Its contents have moved [here](https://github.com/OfficeDev/Microsoft-Teams-Samples/tree/main/samples/app-auth/nodejs).
+
 # Microsoft Teams Authentication Sample
 
 This sample demonstrates authentication in Microsoft Teams apps.
