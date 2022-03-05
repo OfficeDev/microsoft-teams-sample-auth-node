@@ -25,7 +25,7 @@
     "botbuilder-dialogs": "^4.8.0",
     "config": "^1.30.0",
     "express": "^4.16.2",
-    "express-handlebars": "^3.0.0",
+    "express-handlebars": "^5.3.1",
     "querystring": "^0.2.0",
     "request-promise": "^4.2.2",
     "rsa-pem-from-mod-exp": "^0.8.4",
